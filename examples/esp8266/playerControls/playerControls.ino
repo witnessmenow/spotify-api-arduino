@@ -1,6 +1,11 @@
 /*******************************************************************
     Controls spotify player using an ESP8266
 
+    Supports:
+        - Next Track
+        - Previous Track
+        - Seek
+
     You will need a bearer token, as a temp solution, go to this URL
 
     https://developer.spotify.com/console/post-next
@@ -90,9 +95,22 @@ void setup() {
 
     // If you want to enable some extra debugging
     //spotify._debug = true;
-    
+
     delay(1000);
-    spotify.nextTrack(); // can also accept deviceID
+    Serial.print("Going to start of track...");
+    if(spotify.seek(0)){
+        Serial.println("done!");
+    }
+    delay(2000);
+    Serial.print("Going to previous track...");
+    if(spotify.previousTrack()){
+        Serial.println("done!");
+    }
+    delay(2000);
+    Serial.print("Skipping to next track...");
+    if(spotify.nextTrack()){
+        Serial.println("done!");
+    }
 }
 
 

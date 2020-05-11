@@ -24,6 +24,54 @@ ArduinoSpotify::ArduinoSpotify(Client &client, char *bearerToken)
     this->_bearerToken = bearerToken;
 }
 
+int ArduinoSpotify::makePutRequest(char *command)
+{
+    client->flush();
+    client->setTimeout(SPOTIFY_TIMEOUT);
+    if (!client->connect(SPOTIFY_HOST, portNumber))
+    {
+        Serial.println(F("Connection failed"));
+        return false;
+    }
+
+    // give the esp a breather
+    yield();
+
+    // Send HTTP request
+    client->print(F("PUT "));
+    client->print(command);
+    client->println(F(" HTTP/1.1"));
+
+    //Headers
+    client->print(F("Host: "));
+    client->println(SPOTIFY_HOST);
+
+    client->println(F("Accept: application/json"));
+    client->println(F("Content-Type: application/json"));
+
+    client->print(F("Authorization: Bearer "));
+    client->println(_bearerToken);
+
+    client->println(F("Cache-Control: no-cache"));
+
+    client->print(F("Content-Length: "));
+    client->println(0);
+
+    client->println();
+
+    //send Data here?
+
+    if (client->println() == 0)
+    {
+        Serial.println(F("Failed to send request"));
+        return false;
+    }
+
+    int statusCode = getHttpStatusCode();
+    skipHeaders();
+    return statusCode;
+}
+
 int ArduinoSpotify::makePostRequest(char *command)
 {
     client->flush();
@@ -54,6 +102,9 @@ int ArduinoSpotify::makePostRequest(char *command)
 
     client->println(F("Cache-Control: no-cache"));
 
+    client->print(F("Content-Length: "));
+    client->println(0);
+
     client->println();
 
     //send Data here?
@@ -64,18 +115,9 @@ int ArduinoSpotify::makePostRequest(char *command)
         return false;
     }
 
-    while (client->available())
-    {
-        char c = 0;
-        client->readBytes(&c, 1);
-        Serial.println(c);
-    }
-
-    return 0;
-
-    // int statusCode = getHttpStatusCode();
-    // skipHeaders();
-    // return statusCode;
+    int statusCode = getHttpStatusCode();
+    skipHeaders();
+    return statusCode;
 }
 
 int ArduinoSpotify::makeGetRequest(char *command)
@@ -108,9 +150,6 @@ int ArduinoSpotify::makeGetRequest(char *command)
 
     client->println(F("Cache-Control: no-cache"));
 
-    client->print(F("Content-Length: "));
-    client->println(0);
-
     if (client->println() == 0)
     {
         Serial.println(F("Failed to send request"));
@@ -124,8 +163,7 @@ int ArduinoSpotify::makeGetRequest(char *command)
     return statusCode;
 }
 
-bool ArduinoSpotify::nextTrack(char *deviceId){
-    char command[100] = SPOTIFY_NEXT_TRACK_ENDPOINT;
+bool ArduinoSpotify::playerNavigate(char *command,char *deviceId){
     if (deviceId != ""){
         strcat(command, "?deviceId=%s");
         sprintf(command, command, deviceId);
@@ -137,6 +175,35 @@ bool ArduinoSpotify::nextTrack(char *deviceId){
     }
 
     int statusCode = makePostRequest(command);
+
+    //Will return 204 if all went well.
+    return statusCode == 204;
+}
+
+bool ArduinoSpotify::nextTrack(char *deviceId){
+    char command[100] = SPOTIFY_NEXT_TRACK_ENDPOINT;
+    return playerNavigate(command, deviceId);
+}
+
+bool ArduinoSpotify::previousTrack(char *deviceId){
+    char command[100] = SPOTIFY_PREVIOUS_TRACK_ENDPOINT;
+    return playerNavigate(command, deviceId);
+}
+bool ArduinoSpotify::seek(int position, char *deviceId){
+    char command[100] = SPOTIFY_SEEK_ENDPOINT;
+    strcat(command, "?position_ms=%d");
+    sprintf(command, command, position);
+    if (deviceId != ""){
+        strcat(command, "?deviceId=%s");
+        sprintf(command, command, deviceId);
+    }
+
+    if (_debug)
+    {
+        Serial.println(command);
+    }
+
+    int statusCode = makePutRequest(command);
 
     //Will return 204 if all went well.
     return statusCode == 204;

@@ -1,9 +1,19 @@
 # arduino-spotify-api
 Arduino library for integrating with the Spotify Web-API (Does not play music)
 
+**Work in progress library - expect changes!**
 
-Work in progress library
+### Currently supports:
 
-Currently supports:
+- Getting your currently playing track
+- Player Controls:
+    - Next
+    - Previous
+    - Seek
 
-Getting your currently playing track
+### What needs to be added:
+
+- Correct support of OAuth
+- Play/Pause
+- Volume Control
+- Current play time and song length to currently playing.

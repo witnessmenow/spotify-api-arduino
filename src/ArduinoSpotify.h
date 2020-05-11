@@ -31,6 +31,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
 #define SPOTIFY_NEXT_TRACK_ENDPOINT "/v1/me/player/next"
+#define SPOTIFY_PREVIOUS_TRACK_ENDPOINT "/v1/me/player/previous"
+
+#define SPOTIFY_SEEK_ENDPOINT "/v1/me/player/seek"
 //const char currentlyPlayingEndpoint[] = "/v1/me/player/currently-playing";
 //const char playerNextTrackEndpoint[] = "/v1/me/player/next";
 
@@ -51,8 +54,12 @@ class ArduinoSpotify
     ArduinoSpotify(Client &client, char *bearerToken);
     int makeGetRequest(char *command);
     int makePostRequest(char *command);
+    int makePutRequest(char *command);
     CurrentlyPlaying getCurrentlyPlaying(char *market = "");
     bool nextTrack(char *deviceId = "");
+    bool previousTrack(char *deviceId = "");
+    bool playerNavigate(char *command, char *deviceId);
+    bool seek(int position, char *deviceId = "");
     int portNumber = 443;
     int tagArraySize = 10;
     int currentlyPlayingBufferSize = 10000;
