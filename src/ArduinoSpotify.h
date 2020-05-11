@@ -28,7 +28,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_FINGERPRINT "AB BC 7C 9B 7A D8 5D 98 8B B2 72 A4 4C 13 47 9A 00 2F 70 B5"
 #define SPOTIFY_TIMEOUT 2000
 
+
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
+#define SPOTIFY_NEXT_TRACK_ENDPOINT "/v1/me/player/next"
+//const char currentlyPlayingEndpoint[] = "/v1/me/player/currently-playing";
+//const char playerNextTrackEndpoint[] = "/v1/me/player/next";
+
 
 struct CurrentlyPlaying
 {
@@ -44,8 +49,10 @@ class ArduinoSpotify
 {
   public:
     ArduinoSpotify(Client &client, char *bearerToken);
-    bool makeGetRequest(char *command);
+    int makeGetRequest(char *command);
+    int makePostRequest(char *command);
     CurrentlyPlaying getCurrentlyPlaying(char *market = "");
+    bool nextTrack(char *deviceId = "");
     int portNumber = 443;
     int tagArraySize = 10;
     int currentlyPlayingBufferSize = 10000;
@@ -54,6 +61,8 @@ class ArduinoSpotify
 
   private:
     char *_bearerToken;
+    int getHttpStatusCode();
+    void skipHeaders();
     void closeClient();
 };
 

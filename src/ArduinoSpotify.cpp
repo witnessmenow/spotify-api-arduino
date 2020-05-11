@@ -24,7 +24,61 @@ ArduinoSpotify::ArduinoSpotify(Client &client, char *bearerToken)
     this->_bearerToken = bearerToken;
 }
 
-bool ArduinoSpotify::makeGetRequest(char *command)
+int ArduinoSpotify::makePostRequest(char *command)
+{
+    client->flush();
+    client->setTimeout(SPOTIFY_TIMEOUT);
+    if (!client->connect(SPOTIFY_HOST, portNumber))
+    {
+        Serial.println(F("Connection failed"));
+        return false;
+    }
+
+    // give the esp a breather
+    yield();
+
+    // Send HTTP request
+    client->print(F("POST "));
+    client->print(command);
+    client->println(F(" HTTP/1.1"));
+
+    //Headers
+    client->print(F("Host: "));
+    client->println(SPOTIFY_HOST);
+
+    client->println(F("Accept: application/json"));
+    client->println(F("Content-Type: application/json"));
+
+    client->print(F("Authorization: Bearer "));
+    client->println(_bearerToken);
+
+    client->println(F("Cache-Control: no-cache"));
+
+    client->println();
+
+    //send Data here?
+
+    if (client->println() == 0)
+    {
+        Serial.println(F("Failed to send request"));
+        return false;
+    }
+
+    while (client->available())
+    {
+        char c = 0;
+        client->readBytes(&c, 1);
+        Serial.println(c);
+    }
+
+    return 0;
+
+    // int statusCode = getHttpStatusCode();
+    // skipHeaders();
+    // return statusCode;
+}
+
+int ArduinoSpotify::makeGetRequest(char *command)
 {
     client->flush();
     client->setTimeout(SPOTIFY_TIMEOUT);
@@ -54,45 +108,38 @@ bool ArduinoSpotify::makeGetRequest(char *command)
 
     client->println(F("Cache-Control: no-cache"));
 
+    client->print(F("Content-Length: "));
+    client->println(0);
+
     if (client->println() == 0)
     {
         Serial.println(F("Failed to send request"));
         return false;
     }
 
-    // Check HTTP status
-    char status[32] = {0};
-    client->readBytesUntil('\r', status, sizeof(status));
-    if (strcmp(status, "HTTP/1.1 200 OK") != 0)
-    {
-        Serial.print(F("Unexpected response: "));
-        Serial.println(status);
-        return false;
-    }
-
-    // Skip HTTP headers
-    char endOfHeaders[] = "\r\n\r\n";
-    if (!client->find(endOfHeaders))
-    {
-        Serial.println(F("Invalid response"));
-        return false;
-    }
-
-    // Was getting stray characters between the headers and the body
-    // This should toss them away
-    while (client->available() && client->peek() != '{')
-    {
-        char c = 0;
-        client->readBytes(&c, 1);
-        if (_debug)
-        {
-            Serial.print("Tossing an unexpected character: ");
-            Serial.println(c);
-        }
-    }
-
+    int statusCode = getHttpStatusCode();
+    
     // Let the caller of this method parse the JSon from the client
-    return true;
+    skipHeaders();
+    return statusCode;
+}
+
+bool ArduinoSpotify::nextTrack(char *deviceId){
+    char command[100] = SPOTIFY_NEXT_TRACK_ENDPOINT;
+    if (deviceId != ""){
+        strcat(command, "?deviceId=%s");
+        sprintf(command, command, deviceId);
+    }
+
+    if (_debug)
+    {
+        Serial.println(command);
+    }
+
+    int statusCode = makePostRequest(command);
+
+    //Will return 204 if all went well.
+    return statusCode == 204;
 }
 
 CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
@@ -112,7 +159,7 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
     CurrentlyPlaying currentlyPlaying;
     // This flag will get cleared if all goes well
     currentlyPlaying.error = true;
-    if (makeGetRequest(command))
+    if (makeGetRequest(command) == 200)
     {
         // Allocate DynamicJsonDocument
         DynamicJsonDocument doc(bufferSize);
@@ -140,6 +187,41 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
     }
     closeClient();
     return currentlyPlaying;
+}
+
+void ArduinoSpotify::skipHeaders()
+{
+    // Skip HTTP headers
+    char endOfHeaders[] = "\r\n\r\n";
+    if (!client->find(endOfHeaders))
+    {
+        Serial.println(F("Invalid response"));
+        return;
+    }
+
+    // Was getting stray characters between the headers and the body
+    // This should toss them away
+    while (client->available() && client->peek() != '{')
+    {
+        char c = 0;
+        client->readBytes(&c, 1);
+        if (_debug)
+        {
+            Serial.print("Tossing an unexpected character: ");
+            Serial.println(c);
+        }
+    }
+}
+
+int ArduinoSpotify::getHttpStatusCode()
+{
+    // Check HTTP status
+    if(client->find("HTTP/1.1")){
+        int statusCode = client->parseInt();
+        return statusCode;
+    } 
+
+    return -1;
 }
 
 void ArduinoSpotify::closeClient()
