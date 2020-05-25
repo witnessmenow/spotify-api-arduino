@@ -52,6 +52,8 @@ class ArduinoSpotify
 {
   public:
     ArduinoSpotify(Client &client, char *bearerToken);
+    ArduinoSpotify(Client &client, char *authToken, char *clientId, char *clientSecret);
+    // bool refreshAuth();
     int makeGetRequest(char *command);
     int makePostRequest(char *command);
     int makePutRequest(char *command);
@@ -68,6 +70,9 @@ class ArduinoSpotify
 
   private:
     char *_bearerToken;
+    char *_authToken;
+    char *_clientId;
+    char *_clientSecret;
     int getHttpStatusCode();
     void skipHeaders();
     void closeClient();

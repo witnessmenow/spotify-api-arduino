@@ -24,6 +24,14 @@ ArduinoSpotify::ArduinoSpotify(Client &client, char *bearerToken)
     this->_bearerToken = bearerToken;
 }
 
+ArduinoSpotify::ArduinoSpotify(Client &client, char *authToken, char *clientId, char *clientSecret)
+{
+    this->client = &client;
+    this->_authToken = authToken;
+    this->clientId = clientId;
+    this->_clientSecret = clientSecret;
+}
+
 int ArduinoSpotify::makePutRequest(char *command)
 {
     client->flush();
