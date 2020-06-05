@@ -1,12 +1,12 @@
 /*******************************************************************
     Get Auth Token from spotify, this is needed for the other
-    examples.
+    examples. It will store the authToken in littleFS (Spiffs replacement)
 
     - Put in your Wifi details and Client ID and flash to the board
     - Open browser to esp: "esp8266.local"
     - Click the link
     - Authorization Code will be printed to screen, use this
-      for AUTH_CODE in other examples. 
+      for AUTH_CODE in other examples.
 
     - Make sure to whitelist http://arduino.local/callback/
 
@@ -37,6 +37,9 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
+#include <FS.h>
+#include <LittleFS.h>
+
 //------- Replace the following! ------
 
 char ssid[] = "SSID";         // your network SSID (name)
@@ -46,12 +49,14 @@ char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify AP
 char scope[] = "user-read-private%20user-read-email";
 char callbackURI[] = "http%3A%2F%2Farduino.local%2Fcallback%2F";
 
+char fileName[] = "/spotifyAuth";
+
 //------- ---------------------- ------
 
 ESP8266WebServer server(80);
 
-const char *webpageTemplate = 
-R"(
+const char *webpageTemplate =
+  R"(
 <!DOCTYPE html>
 <html>
   <head>
@@ -68,74 +73,99 @@ R"(
 )";
 
 void handleRoot() {
-    char webpage[800];
-    sprintf(webpage, webpageTemplate, clientId, callbackURI, scope);
-    server.send(200, "text/html", webpage);
+  char webpage[800];
+  sprintf(webpage, webpageTemplate, clientId, callbackURI, scope);
+  server.send(200, "text/html", webpage);
+}
+
+bool writeCodeToFS(String code) {
+  File file = LittleFS.open(fileName, "w");
+  if (!file) {
+    Serial.printf("Unable to open file for writing\n");
+    return false;
+  } else {
+    file.write(code.c_str());
+  }
+  file.close();
+  return true;
 }
 
 void handleCallback() {
-    String code = "";
-    for (uint8_t i = 0; i < server.args(); i++) {
-        if(server.argName(i) == "code"){
-            code = server.arg(i);
-        }
+  String code = "";
+  bool wroteCodeToFS = false;
+  for (uint8_t i = 0; i < server.args(); i++) {
+    if (server.argName(i) == "code") {
+      code = server.arg(i);
+      wroteCodeToFS = writeCodeToFS(code);
     }
+  }
 
-    server.send(404, "text/plain", code);
+  if(wroteCodeToFS){
+    code = "Code written to FS: " + code;
+    server.send(200, "text/plain", code);
+  } else {
+    code = "Failed to write code to FS: " + code;
+    server.send(404, "text/plain", code); 
+  }
 }
 
 void handleNotFound() {
-    String message = "File Not Found\n\n";
-    message += "URI: ";
-    message += server.uri();
-    message += "\nMethod: ";
-    message += (server.method() == HTTP_GET) ? "GET" : "POST";
-    message += "\nArguments: ";
-    message += server.args();
-    message += "\n";
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
 
-    for (uint8_t i = 0; i < server.args(); i++) {
+  for (uint8_t i = 0; i < server.args(); i++) {
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-    }
+  }
 
-    Serial.print(message);
-    server.send(404, "text/plain", message);
+  Serial.print(message);
+  server.send(404, "text/plain", message);
 }
 
 void setup() {
 
   Serial.begin(115200);
 
-    // Set WiFi to station mode and disconnect from an AP if it was Previously
-    // connected
-    WiFi.mode(WIFI_STA);
-    WiFi.disconnect();
-    delay(100);
+  if (!LittleFS.begin()) {
+    Serial.printf("Unable to begin FS, aborting\n");
+    return;
+  }
 
-    // Attempt to connect to Wifi network:
-    Serial.print("Connecting Wifi: ");
-    Serial.println(ssid);
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        Serial.print(".");
-        delay(500);
-    }
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    IPAddress ip = WiFi.localIP();
-    Serial.println(ip);
+  // Set WiFi to station mode and disconnect from an AP if it was Previously
+  // connected
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
 
-    if (MDNS.begin("arduino")) {
-        Serial.println("MDNS responder started");
-    }
+  // Attempt to connect to Wifi network:
+  Serial.print("Connecting Wifi: ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  IPAddress ip = WiFi.localIP();
+  Serial.println(ip);
 
-    server.on("/", handleRoot);
-    server.on("/callback/", handleCallback);
-    server.onNotFound(handleNotFound);
-    server.begin();
-    Serial.println("HTTP server started");
+  if (MDNS.begin("arduino")) {
+    Serial.println("MDNS responder started");
+  }
+
+  server.on("/", handleRoot);
+  server.on("/callback/", handleCallback);
+  server.onNotFound(handleNotFound);
+  server.begin();
+  Serial.println("HTTP server started");
 }
 
 
