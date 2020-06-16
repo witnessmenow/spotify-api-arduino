@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #include <Client.h>
 
 #define SPOTIFY_HOST "api.spotify.com"
+#define SPOTIFY_ACCOUNTS_HOST "accounts.spotify.com"
 // Fingerprint correct as of May 4th 2020
 #define SPOTIFY_FINGERPRINT "AB BC 7C 9B 7A D8 5D 98 8B B2 72 A4 4C 13 47 9A 00 2F 70 B5"
 #define SPOTIFY_TIMEOUT 2000
@@ -36,6 +37,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_SEEK_ENDPOINT "/v1/me/player/seek"
 //const char currentlyPlayingEndpoint[] = "/v1/me/player/currently-playing";
 //const char playerNextTrackEndpoint[] = "/v1/me/player/next";
+
+#define SPOTIFY_TOKEN_ENDPOINT "/api/token"
+
+typedef bool (*SaveRefreshToken)();
+typedef char* (*ReadRefreshToken)();
 
 
 struct CurrentlyPlaying
@@ -52,10 +58,12 @@ class ArduinoSpotify
 {
   public:
     ArduinoSpotify(Client &client, char *bearerToken);
-    ArduinoSpotify(Client &client, char *authToken, char *clientId, char *clientSecret);
-    // bool refreshAuth();
+    ArduinoSpotify(Client &client, char *clientId, char *encodedClientIDSecret, SaveRefreshToken saveToken, ReadRefreshToken readToken );
+    ArduinoSpotify(Client &client, char *clientId, SaveRefreshToken saveToken, ReadRefreshToken readToken);
+    bool refreshToken();
+    char* getAuthToken(char * code, char * redirectUrl);
     int makeGetRequest(char *command);
-    int makePostRequest(char *command);
+    int makePostRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
     int makePutRequest(char *command);
     CurrentlyPlaying getCurrentlyPlaying(char *market = "");
     bool nextTrack(char *deviceId = "");
@@ -69,13 +77,19 @@ class ArduinoSpotify
     Client *client;
 
   private:
-    char *_bearerToken;
+    char _bearerToken[200];
     char *_authToken;
     char *_clientId;
     char *_clientSecret;
+    char *_encodedClientIDSecret;
+    ReadRefreshToken _readToken;
+    SaveRefreshToken _saveToken;
     int getHttpStatusCode();
     void skipHeaders();
     void closeClient();
+    const char *getAuthTokenBody = 
+    R"(grant_type=authorization_code&code=%s&redirect_uri=%s)"
+    ;
 };
 
 #endif

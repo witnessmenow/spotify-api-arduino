@@ -101,7 +101,9 @@ void handleCallback() {
   }
 
   if(wroteCodeToFS){
-    code = "Code written to FS: " + code;
+    //code = "Code written to FS: " + code;
+    spotify.getAuthToken((char*) code.c_str(), callbackURI);
+    // now should be authorized
     server.send(200, "text/plain", code);
   } else {
     code = "Failed to write code to FS: " + code;
