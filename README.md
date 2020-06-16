@@ -13,10 +13,8 @@ Arduino library for integrating with the Spotify Web-API (Does not play music)
 
 ### What needs to be added:
 
-- Correct support of OAuth
-    - Implement saving refresh token to persistant memory
-    - Implement Refresh token path
-    - Investigate putting clientID and secret in body ("An alternative way to send the client id and secret is as request parameters (client_id and client_secret) in the POST body, instead of sending them base64-encoded in the header")
+- Update getAuthToken example to remove FS stuff
+- Update readme with info on how to setup
 - Play/Pause
 - Volume Control
 - Current play time and song length to currently playing.

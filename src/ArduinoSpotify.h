@@ -40,10 +40,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
-typedef bool (*SaveRefreshToken)();
-typedef char* (*ReadRefreshToken)();
-
-
 struct CurrentlyPlaying
 {
     char *firstArtistName;
@@ -58,10 +54,10 @@ class ArduinoSpotify
 {
   public:
     ArduinoSpotify(Client &client, char *bearerToken);
-    ArduinoSpotify(Client &client, char *clientId, char *encodedClientIDSecret, SaveRefreshToken saveToken, ReadRefreshToken readToken );
-    ArduinoSpotify(Client &client, char *clientId, SaveRefreshToken saveToken, ReadRefreshToken readToken);
-    bool refreshToken();
-    char* getAuthToken(char * code, char * redirectUrl);
+    ArduinoSpotify(Client &client, char *clientId, char *clientSecret, char *refreshToken = "");
+    void setRefreshToken(char *refreshToken);
+    bool refreshAccessToken();
+    char* requestAccessTokens(char * code, char * redirectUrl);
     int makeGetRequest(char *command);
     int makePostRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
     int makePutRequest(char *command);
@@ -78,17 +74,19 @@ class ArduinoSpotify
 
   private:
     char _bearerToken[200];
-    char *_authToken;
+    char *_refreshToken;
     char *_clientId;
     char *_clientSecret;
-    char *_encodedClientIDSecret;
-    ReadRefreshToken _readToken;
-    SaveRefreshToken _saveToken;
+    unsigned int tokenExpireTime;
     int getHttpStatusCode();
     void skipHeaders();
     void closeClient();
-    const char *getAuthTokenBody = 
-    R"(grant_type=authorization_code&code=%s&redirect_uri=%s)"
+    void parseError();
+    const char *requestAccessTokensBody = 
+    R"(grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s)"
+    ;
+    const char *refreshAccessTokensBody = 
+    R"(grant_type=refresh_token&refresh_token=%s&client_id=%s&client_secret=%s)"
     ;
 };
 

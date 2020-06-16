@@ -40,20 +40,41 @@
 #include <FS.h>
 #include <LittleFS.h>
 
+// ----------------------------
+// Additional Libraries - each one of these will need to be installed.
+// ----------------------------
+
+#include <ArduinoSpotify.h>
+// Library for connecting to the Spotify API
+
+// Install from Github
+// https://github.com/witnessmenow/arduino-spotify-api
+
+#include <ArduinoJson.h>
+// Library used for parsing Json from the API responses
+
+// Search for "Arduino Json" in the Arduino Library manager
+// https://github.com/bblanchon/ArduinoJson
+
 //------- Replace the following! ------
 
 char ssid[] = "SSID";         // your network SSID (name)
 char password[] = "password"; // your network password
 char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify APP
+char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your spotify APP (Do Not share this!)
 
-char scope[] = "user-read-private%20user-read-email";
+char scope[] = "user-read-playback-state%20user-modify-playback-state";
 char callbackURI[] = "http%3A%2F%2Farduino.local%2Fcallback%2F";
 
-char fileName[] = "/spotifyAuth";
+char fileName[] = "/spotifyRefreshToken";
 
 //------- ---------------------- ------
 
 ESP8266WebServer server(80);
+
+
+WiFiClientSecure client;
+ArduinoSpotify spotify(client, clientId, clientSecret);
 
 const char *webpageTemplate =
   R"(
@@ -78,36 +99,34 @@ void handleRoot() {
   server.send(200, "text/html", webpage);
 }
 
-bool writeCodeToFS(String code) {
+bool writeRefreshTokenToFS(char *refreshToken) {
   File file = LittleFS.open(fileName, "w");
   if (!file) {
     Serial.printf("Unable to open file for writing\n");
     return false;
   } else {
-    file.write(code.c_str());
+    file.print(refreshToken);
   }
   file.close();
+  Serial.println("wrote RefreshToken to FS");
   return true;
 }
 
 void handleCallback() {
   String code = "";
-  bool wroteCodeToFS = false;
+  bool wroteRefreshToFS = false;
   for (uint8_t i = 0; i < server.args(); i++) {
     if (server.argName(i) == "code") {
       code = server.arg(i);
-      wroteCodeToFS = writeCodeToFS(code);
+      char *refreshToken = spotify.requestAccessTokens((char*) code.c_str(), callbackURI);
+      wroteRefreshToFS = writeRefreshTokenToFS(refreshToken);
     }
   }
 
-  if(wroteCodeToFS){
-    //code = "Code written to FS: " + code;
-    spotify.getAuthToken((char*) code.c_str(), callbackURI);
-    // now should be authorized
-    server.send(200, "text/plain", code);
+  if(wroteRefreshToFS){
+    server.send(200, "text/plain", "Saved refresh token to FS");
   } else {
-    code = "Failed to write code to FS: " + code;
-    server.send(404, "text/plain", code); 
+    server.send(404, "text/plain", "Failed, check serial monitor"); 
   }
 }
 
@@ -162,6 +181,9 @@ void setup() {
   if (MDNS.begin("arduino")) {
     Serial.println("MDNS responder started");
   }
+
+  spotify._debug = true;
+  client.setFingerprint(SPOTIFY_FINGERPRINT);
 
   server.on("/", handleRoot);
   server.on("/callback/", handleCallback);
