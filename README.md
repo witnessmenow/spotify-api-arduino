@@ -15,6 +15,7 @@ Arduino library for integrating with the Spotify Web-API (Does not play music)
 ### What needs to be added:
 
 - Update getAuthToken example to remove FS stuff
+- Update playerControls example to work
 - Update readme with info on how to setup
 - Play/Pause
 - Volume Control
