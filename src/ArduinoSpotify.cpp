@@ -209,6 +209,7 @@ bool ArduinoSpotify::refreshAccessToken(){
         parseError();
     }
     
+    closeClient();
     return refreshed;
 }
 
@@ -242,6 +243,7 @@ char* ArduinoSpotify::requestAccessTokens(char * code, char * redirectUrl){
         parseError();
     }
     
+    closeClient();
     return _refreshToken;
 }
 
@@ -257,7 +259,8 @@ bool ArduinoSpotify::playerNavigate(char *command,char *deviceId){
     }
 
     int statusCode = makePostRequest(command, _bearerToken);
-
+    
+    closeClient();
     //Will return 204 if all went well.
     return statusCode == 204;
 }
@@ -286,7 +289,7 @@ bool ArduinoSpotify::seek(int position, char *deviceId){
     }
 
     int statusCode = makePutRequest(command);
-
+    closeClient();
     //Will return 204 if all went well.
     return statusCode == 204;
 }

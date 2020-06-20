@@ -1,18 +1,21 @@
 /*******************************************************************
-    Get Auth Token from spotify, this is needed for the other
-    examples. It will store the authToken in littleFS (Spiffs replacement)
+    Get Refresh Token from spotify, this is needed for the other
+    examples.
 
-    - Put in your Wifi details and Client ID and flash to the board
-    - Open browser to esp: "esp8266.local"
+    - Put in your Wifi details, Client ID, Client secret and flash to the board
+    - Get the Ip Address from the serial monitor
+    - update the IP address in "callbackURI" variable and re-upload
+    - Add "http://[ESP_IP]/callback/" to your spotify apps whitelist
+    e.g. "http://192.168.1.20/callback/" (don't forget the last "/")
+    - Open browser to esp using the IP address (MDNS doesn't seem to 
+    work well on the ESP32)
     - Click the link
-    - Authorization Code will be printed to screen, use this
-      for AUTH_CODE in other examples.
-
-    - Make sure to whitelist http://arduino.local/callback/
+    - The Refresh Token will be printed to screen, use this
+      for SPOTIFY_REFRESH_TOKEN in other examples.
 
 
     Parts:
-    D1 Mini ESP8266 * - http://s.click.aliexpress.com/e/uzFUnIe
+    ESP32 D1 Mini stlye Dev board* - http://s.click.aliexpress.com/e/C6ds4my
 
  *  * = Affilate
 
@@ -32,10 +35,10 @@
 // Standard Libraries
 // ----------------------------
 
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <WiFiClient.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
 
 #include <WiFiClientSecure.h>
 
@@ -63,11 +66,18 @@ char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify AP
 char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your spotify APP (Do Not share this!)
 
 char scope[] = "user-read-playback-state%20user-modify-playback-state";
-char callbackURI[] = "http%3A%2F%2Farduino.local%2Fcallback%2F";
+char callbackURItemplate[] = "%s%s%s";
+char callbackURIProtocol[] = "http%3A%2F%2F"; // "http://"
+char callbackURIAddress[] = "%2Fcallback%2F"; // "/callback/"
+char callbackURI[100];
 
 //------- ---------------------- ------
 
-ESP8266WebServer server(80);
+// including a "spotify_server_cert" variable
+// header is included as part of the ArduinoSpotify libary
+#include <ArduinoSpotifyCert.h>
+
+WebServer server(80);
 
 
 WiFiClientSecure client;
@@ -135,33 +145,31 @@ void setup() {
 
   Serial.begin(115200);
 
-  // Set WiFi to station mode and disconnect from an AP if it was Previously
-  // connected
   WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
-  delay(100);
-
-  // Attempt to connect to Wifi network:
-  Serial.print("Connecting Wifi: ");
-  Serial.println(ssid);
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.print(".");
+  Serial.println("");
+
+  // Wait for connection
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
+    Serial.print(".");
   }
   Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  IPAddress ip = WiFi.localIP();
-  Serial.println(ip);
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  IPAddress ipAddress = WiFi.localIP();
+  Serial.println(ipAddress);
 
   if (MDNS.begin("arduino")) {
     Serial.println("MDNS responder started");
   }
 
   spotify._debug = true;
-  client.setFingerprint(SPOTIFY_FINGERPRINT);
+  client.setCACert(spotify_server_cert);
+
+  // Building up callback URL using IP address.
+  sprintf(callbackURI, callbackURItemplate, callbackURIProtocol, ipAddress.toString().c_str(), callbackURIAddress);
 
   server.on("/", handleRoot);
   server.on("/callback/", handleCallback);
@@ -174,5 +182,4 @@ void setup() {
 
 void loop() {
   server.handleClient();
-  MDNS.update();
 }

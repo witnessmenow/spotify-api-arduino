@@ -5,8 +5,9 @@ Arduino library for integrating with the Spotify Web-API (Does not play music)
 
 ### Currently supports:
 
+- Get Refresh Token (for authenticating calls)
 - Getting your currently playing track
-- Player Controls:
+- Player Controls: (Example needs to be updated)
     - Next
     - Previous
     - Seek
