@@ -2,11 +2,8 @@
     Prints your currently playing track on spotify to the
     serial monitor using an ESP8266
 
-    You will need a bearer token, as a temp solution, go to this URL
-
-    https://developer.spotify.com/console/get-users-currently-playing-track/
-
-    Login, and click the "Get Token" button, this is your bearer token
+    NOTE: You need to get a Refresh token to use this example
+    Use the getRefreshToken example to get it.
 
     Parts:
     D1 Mini ESP8266 * - http://s.click.aliexpress.com/e/uzFUnIe
