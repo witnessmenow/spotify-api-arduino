@@ -1,16 +1,12 @@
 /*******************************************************************
-    Controls spotify player using an ESP8266
-
-    Supports:
-        - Next Track
-        - Previous Track
-        - Seek
+    Prints your currently playing track on spotify to the
+    serial monitor using an ES32
 
     NOTE: You need to get a Refresh token to use this example
     Use the getRefreshToken example to get it.
 
     Parts:
-    D1 Mini ESP8266 * - http://s.click.aliexpress.com/e/uzFUnIe
+    ESP32 D1 Mini stlye Dev board* - http://s.click.aliexpress.com/e/C6ds4my
 
  *  * = Affilate
 
@@ -30,7 +26,7 @@
 // Standard Libraries
 // ----------------------------
 
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <WiFiClientSecure.h>
 
 // ----------------------------
@@ -57,70 +53,95 @@ char password[] = "password"; // your network password
 char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify APP
 char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your spotify APP (Do Not share this!)
 
+// Country code, including this is advisable
+#define SPOTIFY_MARKET "IE"
+
 #define SPOTIFY_REFRESH_TOKEN "AAAAAAAAAABBBBBBBBBBBCCCCCCCCCCCDDDDDDDDDDD"
+
 
 //------- ---------------------- ------
 
+// including a "spotify_server_cert" variable
+// header is included as part of the ArduinoSpotify libary
+#include <ArduinoSpotifyCert.h>
+
 WiFiClientSecure client;
 ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
+
+unsigned long delayBetweenRequests = 60000; // Time between requests (1 minute)
+unsigned long requestDueTime;               //time when request due
 
 
 void setup() {
 
   Serial.begin(115200);
 
-    // Set WiFi to station mode and disconnect from an AP if it was Previously
-    // connected
     WiFi.mode(WIFI_STA);
-    WiFi.disconnect();
-    delay(100);
-
-    // Attempt to connect to Wifi network:
-    Serial.print("Connecting Wifi: ");
-    Serial.println(ssid);
     WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        Serial.print(".");
-        delay(500);
+    Serial.println("");
+
+    // Wait for connection
+    while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
     }
     Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    IPAddress ip = WiFi.localIP();
-    Serial.println(ip);
+    Serial.print("Connected to ");
+    Serial.println(ssid);
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
 
-    // Only avaible in ESP8266 V2.5 RC1 and above
-    client.setFingerprint(SPOTIFY_FINGERPRINT);
+    client.setCACert(spotify_server_cert);
 
     // If you want to enable some extra debugging
-    //spotify._debug = true;
-
+    // spotify._debug = true;
     Serial.println("Refreshing Access Tokens");
     if(!spotify.refreshAccessToken()){
         Serial.println("Failed to get access tokens");
-        return;
-    }
-
-    delay(1000);
-    Serial.print("Going to start of track...");
-    if(spotify.seek(0)){
-        Serial.println("done!");
-    }
-    delay(2000);
-    Serial.print("Going to previous track...");
-    if(spotify.previousTrack()){
-        Serial.println("done!");
-    }
-    delay(2000);
-    Serial.print("Skipping to next track...");
-    if(spotify.nextTrack()){
-        Serial.println("done!");
     }
 }
 
+void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
+{
+    if (!currentlyPlaying.error)
+    {
+        Serial.println("--------- Currently Playing ---------");
 
-// Example code is at end of setup
+    
+        Serial.print("Is Playing: ");
+        if (currentlyPlaying.isPlaying)
+        {
+            Serial.println("Yes");
+        } else {
+            Serial.println("No");
+        }
+
+        Serial.print("Track: ");
+        Serial.println(currentlyPlaying.trackName);
+
+        Serial.print("Artist: ");
+        Serial.println(currentlyPlaying.firstArtistName);
+
+        Serial.print("Album: ");
+        Serial.println(currentlyPlaying.albumName);
+
+        Serial.println("------------------------");
+    }
+}
+
 void loop() {
-  
+  if (millis() > requestDueTime)
+    {
+        Serial.print("Free Heap: ");
+        Serial.println(ESP.getFreeHeap());
+
+        Serial.println("getting currently playing song:");
+        // Market can be excluded if you want e.g. spotify.getCurrentlyPlaying()
+        CurrentlyPlaying currentlyPlaying = spotify.getCurrentlyPlaying(SPOTIFY_MARKET);
+
+        printCurrentlyPlayingToSerial(currentlyPlaying);
+
+        requestDueTime = millis() + delayBetweenRequests;
+    }
+
 }

@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #include <Client.h>
 
 #define SPOTIFY_HOST "api.spotify.com"
+#define SPOTIFY_ACCOUNTS_HOST "accounts.spotify.com"
 // Fingerprint correct as of May 4th 2020
 #define SPOTIFY_FINGERPRINT "AB BC 7C 9B 7A D8 5D 98 8B B2 72 A4 4C 13 47 9A 00 2F 70 B5"
 #define SPOTIFY_TIMEOUT 2000
@@ -37,6 +38,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 //const char currentlyPlayingEndpoint[] = "/v1/me/player/currently-playing";
 //const char playerNextTrackEndpoint[] = "/v1/me/player/next";
 
+#define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
 struct CurrentlyPlaying
 {
@@ -52,8 +54,12 @@ class ArduinoSpotify
 {
   public:
     ArduinoSpotify(Client &client, char *bearerToken);
+    ArduinoSpotify(Client &client, char *clientId, char *clientSecret, char *refreshToken = "");
+    void setRefreshToken(char *refreshToken);
+    bool refreshAccessToken();
+    char* requestAccessTokens(char * code, char * redirectUrl);
     int makeGetRequest(char *command);
-    int makePostRequest(char *command);
+    int makePostRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
     int makePutRequest(char *command);
     CurrentlyPlaying getCurrentlyPlaying(char *market = "");
     bool nextTrack(char *deviceId = "");
@@ -67,10 +73,21 @@ class ArduinoSpotify
     Client *client;
 
   private:
-    char *_bearerToken;
+    char _bearerToken[200];
+    char *_refreshToken;
+    char *_clientId;
+    char *_clientSecret;
+    unsigned int tokenExpireTime;
     int getHttpStatusCode();
     void skipHeaders();
     void closeClient();
+    void parseError();
+    const char *requestAccessTokensBody = 
+    R"(grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s)"
+    ;
+    const char *refreshAccessTokensBody = 
+    R"(grant_type=refresh_token&refresh_token=%s&client_id=%s&client_secret=%s)"
+    ;
 };
 
 #endif

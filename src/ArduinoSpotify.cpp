@@ -21,7 +21,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 ArduinoSpotify::ArduinoSpotify(Client &client, char *bearerToken)
 {
     this->client = &client;
-    this->_bearerToken = bearerToken;
+    sprintf(this->_bearerToken, "Bearer %s", bearerToken);
+   
+}
+
+ArduinoSpotify::ArduinoSpotify(Client &client, char *clientId, char *clientSecret, char *refreshToken)
+{
+    this->client = &client;
+    this->_clientId = clientId;
+    this->_clientSecret = clientSecret;
+    this->_refreshToken = refreshToken;
 }
 
 int ArduinoSpotify::makePutRequest(char *command)
@@ -49,7 +58,7 @@ int ArduinoSpotify::makePutRequest(char *command)
     client->println(F("Accept: application/json"));
     client->println(F("Content-Type: application/json"));
 
-    client->print(F("Authorization: Bearer "));
+    client->print(F("Authorization: "));
     client->println(_bearerToken);
 
     client->println(F("Cache-Control: no-cache"));
@@ -72,11 +81,11 @@ int ArduinoSpotify::makePutRequest(char *command)
     return statusCode;
 }
 
-int ArduinoSpotify::makePostRequest(char *command)
+int ArduinoSpotify::makePostRequest(char *command, char* authorization, char *body, char *contentType, char *host)
 {
     client->flush();
     client->setTimeout(SPOTIFY_TIMEOUT);
-    if (!client->connect(SPOTIFY_HOST, portNumber))
+    if (!client->connect(host, portNumber))
     {
         Serial.println(F("Connection failed"));
         return false;
@@ -92,22 +101,25 @@ int ArduinoSpotify::makePostRequest(char *command)
 
     //Headers
     client->print(F("Host: "));
-    client->println(SPOTIFY_HOST);
+    client->println(host);
 
     client->println(F("Accept: application/json"));
-    client->println(F("Content-Type: application/json"));
+    client->print(F("Content-Type: "));
+    client->println(contentType);
 
-    client->print(F("Authorization: Bearer "));
-    client->println(_bearerToken);
+    if(authorization != NULL){
+        client->print(F("Authorization: "));
+        client->println(authorization);
+    }
 
     client->println(F("Cache-Control: no-cache"));
 
     client->print(F("Content-Length: "));
-    client->println(0);
+    client->println(strlen(body));
 
     client->println();
 
-    //send Data here?
+    client->print(body);
 
     if (client->println() == 0)
     {
@@ -145,7 +157,7 @@ int ArduinoSpotify::makeGetRequest(char *command)
     client->println(F("Accept: application/json"));
     client->println(F("Content-Type: application/json"));
 
-    client->print(F("Authorization: Bearer "));
+    client->print(F("Authorization: "));
     client->println(_bearerToken);
 
     client->println(F("Cache-Control: no-cache"));
@@ -163,6 +175,78 @@ int ArduinoSpotify::makeGetRequest(char *command)
     return statusCode;
 }
 
+void ArduinoSpotify::setRefreshToken(char *refreshToken){
+    _refreshToken = refreshToken;
+}
+
+bool ArduinoSpotify::refreshAccessToken(){
+    char body[1000];
+    sprintf(body, refreshAccessTokensBody, _refreshToken, _clientId, _clientSecret);
+
+    if (_debug)
+    {
+        Serial.println(body);
+    }
+
+    int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
+    if (_debug)
+    {
+        Serial.print("status Code");
+        Serial.println(statusCode);
+    }
+    bool refreshed = false;
+    if(statusCode == 200){
+        DynamicJsonDocument doc(1000);
+        DeserializationError error = deserializeJson(doc, *client);
+        if (!error)
+        {
+            sprintf(this->_bearerToken, "Bearer %s", doc["access_token"].as<char *>());
+            int tokenTtl = doc["expires_in"]; // 3600
+            tokenExpireTime = millis() + tokenTtl;
+            refreshed = true;
+        }
+    } else {
+        parseError();
+    }
+    
+    closeClient();
+    return refreshed;
+}
+
+char* ArduinoSpotify::requestAccessTokens(char * code, char * redirectUrl){
+
+    char body[1000];
+    sprintf(body, requestAccessTokensBody, code, redirectUrl, _clientId, _clientSecret);
+
+    if (_debug)
+    {
+        Serial.println(body);
+    }
+
+    int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
+    if (_debug)
+    {
+        Serial.print("status Code");
+        Serial.println(statusCode);
+    }
+    if(statusCode == 200){
+        DynamicJsonDocument doc(1000);
+        DeserializationError error = deserializeJson(doc, *client);
+        if (!error)
+        {
+            sprintf(this->_bearerToken, "Bearer %s", doc["access_token"].as<char *>());
+            _refreshToken = (char *) doc["refresh_token"].as<char *>();
+            int tokenTtl = doc["expires_in"]; // 3600
+            tokenExpireTime = millis() + tokenTtl;
+        }
+    } else {
+        parseError();
+    }
+    
+    closeClient();
+    return _refreshToken;
+}
+
 bool ArduinoSpotify::playerNavigate(char *command,char *deviceId){
     if (deviceId != ""){
         strcat(command, "?deviceId=%s");
@@ -174,8 +258,9 @@ bool ArduinoSpotify::playerNavigate(char *command,char *deviceId){
         Serial.println(command);
     }
 
-    int statusCode = makePostRequest(command);
-
+    int statusCode = makePostRequest(command, _bearerToken);
+    
+    closeClient();
     //Will return 204 if all went well.
     return statusCode == 204;
 }
@@ -204,7 +289,7 @@ bool ArduinoSpotify::seek(int position, char *deviceId){
     }
 
     int statusCode = makePutRequest(command);
-
+    closeClient();
     //Will return 204 if all went well.
     return statusCode == 204;
 }
@@ -289,6 +374,19 @@ int ArduinoSpotify::getHttpStatusCode()
     } 
 
     return -1;
+}
+
+void ArduinoSpotify::parseError()
+{
+    DynamicJsonDocument doc(1000);
+    DeserializationError error = deserializeJson(doc, *client);
+    if (!error)
+    {
+        Serial.print("getAuthToken error");
+        serializeJson(doc, Serial);
+    } else {
+        Serial.print("Could not parse error");
+    }
 }
 
 void ArduinoSpotify::closeClient()

@@ -2,11 +2,8 @@
     Prints your currently playing track on spotify to the
     serial monitor using an ESP8266
 
-    You will need a bearer token, as a temp solution, go to this URL
-
-    https://developer.spotify.com/console/get-users-currently-playing-track/
-
-    Login, and click the "Get Token" button, this is your bearer token
+    NOTE: You need to get a Refresh token to use this example
+    Use the getRefreshToken example to get it.
 
     Parts:
     D1 Mini ESP8266 * - http://s.click.aliexpress.com/e/uzFUnIe
@@ -53,19 +50,23 @@
 char ssid[] = "SSID";         // your network SSID (name)
 char password[] = "password"; // your network password
 
+char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify APP
+char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your spotify APP (Do Not share this!)
+
 // Country code, including this is advisable
 #define SPOTIFY_MARKET "IE"
 
-#define SPOTIFY_BEARER_TOKEN "AAAAAAAAAABBBBBBBBBBBCCCCCCCCCCCDDDDDDDDDDD"
+#define SPOTIFY_REFRESH_TOKEN "AAAAAAAAAABBBBBBBBBBBCCCCCCCCCCCDDDDDDDDDDD"
 
 
 //------- ---------------------- ------
 
 WiFiClientSecure client;
-ArduinoSpotify spotify(client, SPOTIFY_BEARER_TOKEN);
+ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
 
 unsigned long delayBetweenRequests = 60000; // Time between requests (1 minute)
 unsigned long requestDueTime;               //time when request due
+
 
 void setup() {
 
@@ -97,6 +98,10 @@ void setup() {
 
     // If you want to enable some extra debugging
     //spotify._debug = true;
+    Serial.println("Refreshing Access Tokens");
+    if(!spotify.refreshAccessToken()){
+        Serial.println("Failed to get access tokens");
+    }
 }
 
 void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)

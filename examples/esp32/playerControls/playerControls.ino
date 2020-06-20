@@ -1,5 +1,5 @@
 /*******************************************************************
-    Controls spotify player using an ESP8266
+    Controls spotify player using an ESP32
 
     Supports:
         - Next Track
@@ -10,7 +10,7 @@
     Use the getRefreshToken example to get it.
 
     Parts:
-    D1 Mini ESP8266 * - http://s.click.aliexpress.com/e/uzFUnIe
+    ESP32 D1 Mini stlye Dev board* - http://s.click.aliexpress.com/e/C6ds4my
 
  *  * = Affilate
 
@@ -30,7 +30,7 @@
 // Standard Libraries
 // ----------------------------
 
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <WiFiClientSecure.h>
 
 // ----------------------------
@@ -61,6 +61,10 @@ char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your sp
 
 //------- ---------------------- ------
 
+// including a "spotify_server_cert" variable
+// header is included as part of the ArduinoSpotify libary
+#include <ArduinoSpotifyCert.h>
+
 WiFiClientSecure client;
 ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
 
@@ -90,8 +94,7 @@ void setup() {
     IPAddress ip = WiFi.localIP();
     Serial.println(ip);
 
-    // Only avaible in ESP8266 V2.5 RC1 and above
-    client.setFingerprint(SPOTIFY_FINGERPRINT);
+    client.setCACert(spotify_server_cert);
 
     // If you want to enable some extra debugging
     //spotify._debug = true;
