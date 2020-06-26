@@ -117,6 +117,56 @@ void setup() {
     if(spotify.nextTrack()){
         Serial.println("done!");
     }
+
+    // Setting volume doesn't seem to work on my Android Phone
+    // It does work on my Desktop client
+    delay(2000);
+    Serial.print("set Volume 10%...");
+    if(spotify.setVolume(10)){
+        Serial.println("done!");
+    }
+    delay(2000);
+    Serial.print("set Volume 70%...");
+    if(spotify.setVolume(70)){
+        Serial.println("done!");
+    }
+    delay(2000);
+    Serial.print("Pausing...");
+    if(spotify.pause()){
+        Serial.println("done!");
+    }
+    delay(2000);
+    Serial.print("Playing...");
+    if(spotify.play()){
+        Serial.println("done!");
+    }
+
+    delay(3000);
+    Serial.print("enabling shuffle...");
+    if(spotify.toggleShuffle(true)){
+        Serial.println("done!");
+    }
+    delay(3000);
+    Serial.print("disabling shuffle...");
+    if(spotify.toggleShuffle(false)){
+        Serial.println("done!");
+    }
+
+    delay(3000);
+    Serial.print("Setting repeat mode to 'track'...");
+    if(spotify.setRepeatMode(repeat_track)){
+        Serial.println("done!");
+    }
+    delay(3000);
+    Serial.print("Setting repeat mode to 'context'...");
+    if(spotify.setRepeatMode(repeat_context)){
+        Serial.println("done!");
+    }
+    delay(3000);
+    Serial.print("Setting repeat mode to 'off'...");
+    if(spotify.setRepeatMode(repeat_off)){
+        Serial.println("done!");
+    }
 }
 
 

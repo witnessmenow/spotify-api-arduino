@@ -31,6 +31,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
+
+#define SPOTIFY_PLAY_ENDPOINT "/v1/me/player/play"
+#define SPOTIFY_PAUSE_ENDPOINT "/v1/me/player/pause"
+#define SPOTIFY_VOLUME_ENDPOINT "/v1/me/player/volume?volume_percent=%d"
+#define SPOTIFY_SHUFFLE_ENDPOINT "/v1/me/player/shuffle?state=%s"
+#define SPOTIFY_REPEAT_ENDPOINT "/v1/me/player/repeat?state=%s"
+
 #define SPOTIFY_NEXT_TRACK_ENDPOINT "/v1/me/player/next"
 #define SPOTIFY_PREVIOUS_TRACK_ENDPOINT "/v1/me/player/previous"
 
@@ -39,6 +46,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 //const char playerNextTrackEndpoint[] = "/v1/me/player/next";
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
+
+enum RepeatOptions { repeat_track, repeat_context, repeat_off };
 
 struct CurrentlyPlaying
 {
@@ -55,20 +64,37 @@ class ArduinoSpotify
   public:
     ArduinoSpotify(Client &client, char *bearerToken);
     ArduinoSpotify(Client &client, char *clientId, char *clientSecret, char *refreshToken = "");
+    
+    // Auth Methods
     void setRefreshToken(char *refreshToken);
     bool refreshAccessToken();
+    bool checkAndRefreshAccessToken();
     char* requestAccessTokens(char * code, char * redirectUrl);
+    
+    // Generic Request Methods
     int makeGetRequest(char *command);
+    int makeRequestWithBody(char *type, char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
     int makePostRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
-    int makePutRequest(char *command);
+    int makePutRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json");
+
+    // User methods
     CurrentlyPlaying getCurrentlyPlaying(char *market = "");
+    bool play(char *deviceId = "");
+    bool pause(char *deviceId = "");
+    bool setVolume(int volume, char *deviceId = "");
+    bool toggleShuffle(bool shuffle, char *deviceId = "");
+    bool setRepeatMode(RepeatOptions repeat, char *deviceId = "");
     bool nextTrack(char *deviceId = "");
     bool previousTrack(char *deviceId = "");
+    bool playerControl(char *command, char *deviceId);
     bool playerNavigate(char *command, char *deviceId);
     bool seek(int position, char *deviceId = "");
+    
+    
     int portNumber = 443;
     int tagArraySize = 10;
     int currentlyPlayingBufferSize = 10000;
+    bool autoTokenRefresh = true;
     bool _debug = false;
     Client *client;
 
@@ -77,7 +103,8 @@ class ArduinoSpotify
     char *_refreshToken;
     char *_clientId;
     char *_clientSecret;
-    unsigned int tokenExpireTime;
+    unsigned int timeTokenRefreshed;
+    unsigned int tokenTimeToLiveMs;
     int getHttpStatusCode();
     void skipHeaders();
     void closeClient();

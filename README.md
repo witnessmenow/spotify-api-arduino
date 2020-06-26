@@ -11,14 +11,17 @@ Arduino library for integrating with the Spotify Web-API (Does not play music)
     - Next
     - Previous
     - Seek
+    - Play (basic version, basically resumes a paused track)
+    - Pause
+    - Set Volume (doesn't seem to work on my phone, works on desktop though)
+    - Set Repeat Modes
+    - Toggle Shuffle
 
 ### What needs to be added:
 
-- Add a solution for expired tokens
-- Update readme with info on how to setup
-- Play/Pause
-- Volume Control
+- Add a solution for expired tokens (hopefully done, needs to be tested)
 - Current play time and song length to currently playing.
+- Save more info on player devices and state.
 
 
 ### Scopes

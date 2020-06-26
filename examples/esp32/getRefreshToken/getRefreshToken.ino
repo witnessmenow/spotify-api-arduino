@@ -4,7 +4,6 @@
 
     - Put in your Wifi details, Client ID, Client secret and flash to the board
     - Get the Ip Address from the serial monitor
-    - update the IP address in "callbackURI" variable and re-upload
     - Add "http://[ESP_IP]/callback/" to your spotify apps whitelist
     e.g. "http://192.168.1.20/callback/" (don't forget the last "/")
     - Open browser to esp using the IP address (MDNS doesn't seem to 
