@@ -1,14 +1,21 @@
 /*******************************************************************
-    Get Auth Token from spotify, this is needed for the other
-    examples. It will store the authToken in littleFS (Spiffs replacement)
+    Get Refresh Token from spotify, this is needed for the other
+    examples. 
 
-    - Put in your Wifi details and Client ID and flash to the board
+    If you are on windows you will need to install Bonjour for MDNS ("arduino.local")
+    to work: https://support.apple.com/kb/dl999?locale=en_IE
+
+
+    Instrucitons:
+
+
+    - Add the following to Redirect URI on your Spotify app "http://arduino.local/callback/" 
+    (don't forget the last "/")
+    - Put in your Wifi details, Client ID and Client Secret and flash to the board
     - Open browser to esp: "esp8266.local"
     - Click the link
     - Authorization Code will be printed to screen, use this
-      for AUTH_CODE in other examples.
-
-    - Make sure to whitelist http://arduino.local/callback/
+      for SPOTIFY_REFRESH_TOKEN in other examples.
 
 
     Parts:

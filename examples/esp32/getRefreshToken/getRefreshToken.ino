@@ -2,12 +2,16 @@
     Get Refresh Token from spotify, this is needed for the other
     examples.
 
+    Note: MDNS does not seem to work well on the ESP32 so we will have to use
+    the IP address for the redirect URL
+
+    Instrucitons:
+
     - Put in your Wifi details, Client ID, Client secret and flash to the board
     - Get the Ip Address from the serial monitor
-    - Add "http://[ESP_IP]/callback/" to your spotify apps whitelist
+    - Add the following to Redirect URI on your Spotify app "http://[ESP_IP]/callback/"
     e.g. "http://192.168.1.20/callback/" (don't forget the last "/")
-    - Open browser to esp using the IP address (MDNS doesn't seem to 
-    work well on the ESP32)
+    - Open browser to esp using the IP address
     - Click the link
     - The Refresh Token will be printed to screen, use this
       for SPOTIFY_REFRESH_TOKEN in other examples.
