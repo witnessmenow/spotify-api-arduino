@@ -47,6 +47,7 @@ Follow the instructions in one of the following examples to get your token.
 
 - [ESP8266](examples/esp8266/getRefreshToken/getRefreshToken.ino)
 - [ESP32](examples/esp32/getRefreshToken/getRefreshToken.ino)
+- WiFiNINA (Nano 33 IOT) - [Help needed to create an example](https://github.com/witnessmenow/arduino-spotify-api/issues/2)
 
 Note: Once you have a refresh token, you can use it on either platform in your sketches, it is not tied to any particular device.
 
