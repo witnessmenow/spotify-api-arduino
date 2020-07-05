@@ -229,6 +229,11 @@ bool ArduinoSpotify::play(char *deviceId){
     return playerControl(command, deviceId);
 }
 
+bool ArduinoSpotify::playAdvanced(char *body, char *deviceId){
+    char command[100] = SPOTIFY_PLAY_ENDPOINT;
+    return playerControl(command, deviceId, body);
+}
+
 bool ArduinoSpotify::pause(char *deviceId){
     char command[100] = SPOTIFY_PAUSE_ENDPOINT;
     return playerControl(command, deviceId);
@@ -266,7 +271,7 @@ bool ArduinoSpotify::setRepeatMode(RepeatOptions repeat, char *deviceId){
     return playerControl(command, deviceId);
 }
 
-bool ArduinoSpotify::playerControl(char *command,char *deviceId){
+bool ArduinoSpotify::playerControl(char *command,char *deviceId, char *body){
     if (deviceId != ""){
         char * questionMarkPointer;
         questionMarkPointer = strchr(command,'?');
@@ -282,12 +287,13 @@ bool ArduinoSpotify::playerControl(char *command,char *deviceId){
     if (_debug)
     {
         Serial.println(command);
+        Serial.println(body);
     }
 
     if(autoTokenRefresh){
         checkAndRefreshAccessToken();
     }
-    int statusCode = makePutRequest(command, _bearerToken);
+    int statusCode = makePutRequest(command, _bearerToken, body);
     
     closeClient();
     //Will return 204 if all went well.
@@ -379,9 +385,14 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
             JsonObject item = doc["item"];
             JsonObject firstArtist = item["album"]["artists"][0];
 
-            currentlyPlaying.firstArtistName = (char *) firstArtist["name"].as<char *>(); 
+            currentlyPlaying.firstArtistName = (char *) firstArtist["name"].as<char *>();
+            currentlyPlaying.firstArtistUri = (char *) firstArtist["uri"].as<char *>(); 
+
             currentlyPlaying.albumName = (char *) item["album"]["name"].as<char *>(); 
+            currentlyPlaying.albumUri = (char *) item["album"]["uri"].as<char *>(); 
+
             currentlyPlaying.trackName = (char *) item["name"].as<char *>(); 
+            currentlyPlaying.trackUri = (char *) item["uri"].as<char *>(); 
 
             currentlyPlaying.isPlaying = doc["is_playing"].as<bool>();
 

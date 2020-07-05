@@ -52,8 +52,11 @@ enum RepeatOptions { repeat_track, repeat_context, repeat_off };
 struct CurrentlyPlaying
 {
     char *firstArtistName;
+    char *firstArtistUri;
     char *albumName;
+    char *albumUri;
     char *trackName;
+    char *trackUri;
     bool isPlaying;
 
     bool error;
@@ -80,13 +83,14 @@ class ArduinoSpotify
     // User methods
     CurrentlyPlaying getCurrentlyPlaying(char *market = "");
     bool play(char *deviceId = "");
+    bool playAdvanced(char *body, char *deviceId = "");
     bool pause(char *deviceId = "");
     bool setVolume(int volume, char *deviceId = "");
     bool toggleShuffle(bool shuffle, char *deviceId = "");
     bool setRepeatMode(RepeatOptions repeat, char *deviceId = "");
     bool nextTrack(char *deviceId = "");
     bool previousTrack(char *deviceId = "");
-    bool playerControl(char *command, char *deviceId);
+    bool playerControl(char *command, char *deviceId, char *body = "");
     bool playerNavigate(char *command, char *deviceId);
     bool seek(int position, char *deviceId = "");
     

@@ -118,12 +118,21 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
 
         Serial.print("Track: ");
         Serial.println(currentlyPlaying.trackName);
+        Serial.print("Track URI: ");
+        Serial.println(currentlyPlaying.trackUri);
+        Serial.println();
 
         Serial.print("Artist: ");
         Serial.println(currentlyPlaying.firstArtistName);
+        Serial.print("Artist URI: ");
+        Serial.println(currentlyPlaying.firstArtistUri);
+        Serial.println();
 
         Serial.print("Album: ");
         Serial.println(currentlyPlaying.albumName);
+        Serial.print("Album URI: ");
+        Serial.println(currentlyPlaying.albumUri);
+        Serial.println();
 
         Serial.println("------------------------");
     }
