@@ -134,6 +134,14 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
         Serial.println(currentlyPlaying.albumUri);
         Serial.println();
 
+        Serial.print("Album Image: ");
+        Serial.println(currentlyPlaying.smallestImage.url);
+        Serial.print("Dimensions: ");
+        Serial.print(currentlyPlaying.smallestImage.width);
+        Serial.print(" x ");
+        Serial.print(currentlyPlaying.smallestImage.height);
+        Serial.println();
+
         Serial.println("------------------------");
     }
 }
