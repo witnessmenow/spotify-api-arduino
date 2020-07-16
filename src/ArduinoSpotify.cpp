@@ -391,6 +391,15 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
             currentlyPlaying.albumName = (char *) item["album"]["name"].as<char *>(); 
             currentlyPlaying.albumUri = (char *) item["album"]["uri"].as<char *>(); 
 
+            JsonArray images = item["album"]["images"];
+
+            // Images are returned in order of width, so last should be smallest.
+            int indexOfSmallest = images.size() - 1;
+
+            currentlyPlaying.smallestImage.height = images[indexOfSmallest]["height"].as<int>(); 
+            currentlyPlaying.smallestImage.width = images[indexOfSmallest]["width"].as<int>(); 
+            currentlyPlaying.smallestImage.url = (char *) images[indexOfSmallest]["url"].as<char *>(); 
+
             currentlyPlaying.trackName = (char *) item["name"].as<char *>(); 
             currentlyPlaying.trackUri = (char *) item["uri"].as<char *>(); 
 

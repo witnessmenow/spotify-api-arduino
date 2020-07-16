@@ -49,6 +49,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 enum RepeatOptions { repeat_track, repeat_context, repeat_off };
 
+struct SpotifyImage
+{
+  int height;
+  int width;
+  char *url;
+};
+
 struct CurrentlyPlaying
 {
     char *firstArtistName;
@@ -57,6 +64,7 @@ struct CurrentlyPlaying
     char *albumUri;
     char *trackName;
     char *trackUri;
+    SpotifyImage smallestImage;
     bool isPlaying;
 
     bool error;
