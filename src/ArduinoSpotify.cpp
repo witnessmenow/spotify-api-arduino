@@ -97,7 +97,7 @@ int ArduinoSpotify::makeGetRequest(char *command, char* authorization, char *acc
 {
     client->flush();
     client->setTimeout(SPOTIFY_TIMEOUT);
-    if (!client->connect(SPOTIFY_HOST, portNumber))
+    if (!client->connect(host, portNumber))
     {
         Serial.println(F("Connection failed"));
         return -1;
@@ -113,7 +113,7 @@ int ArduinoSpotify::makeGetRequest(char *command, char* authorization, char *acc
 
     //Headers
     client->print(F("Host: "));
-    client->println(SPOTIFY_HOST);
+    client->println(host);
 
     if(accept != NULL){
         client->print(F("Accept: "));
@@ -432,29 +432,141 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
 
 bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
 {
-    return false;
+    uint8_t lengthOfString = strlen(imageUrl);
+
+    uint8_t hostIndex = 7;
+    // looking for the 's' in "https"
+    if (imageUrl[4] == 's') {
+        hostIndex = 8; 
+    }
+
+    char *commandStart = strchr(imageUrl + hostIndex, '/');
+    uint8_t commandIndex = commandStart - imageUrl;
+    uint8_t commandLength = lengthOfString - commandIndex + 1; // need to include the '/'
+    char command[commandLength + 1];
+    strncpy(command, commandStart, commandLength);
+    command[commandLength] = '\0';
+
+    uint8_t hostLength = commandStart - (imageUrl + hostIndex);
+    char host[hostLength];
+    strncpy(host, imageUrl + hostIndex, hostLength);
+    host[hostLength] = '\0';
+    // host is copied to a new string
+
+    char protocol[hostIndex];
+    strncpy(protocol, imageUrl, hostIndex);
+    protocol[hostIndex] = '\0';
+    // protocol is copied to a new string
+
+    #ifdef SPOTIFY_DEBUG
+    Serial.print(F("protocol: "));
+    Serial.println(protocol);
+
+    Serial.print(F("len:protocol: "));
+    Serial.println(hostIndex);
+
+    Serial.print(F("host: "));
+    Serial.println(host);
+
+    Serial.print(F("len:host:"));
+    Serial.println(hostLength);
+
+    Serial.print(F("command: "));
+    Serial.println(command);
+
+    Serial.print(F("len:command: "));
+    Serial.println(strlen(command));
+    #endif
+
+    bool status = false;
+    int statusCode = makeGetRequest(command, NULL, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8", host);
+    #ifdef SPOTIFY_DEBUG
+    Serial.print(F("statusCode: "));
+    Serial.println(statusCode);
+    #endif
+    if(statusCode == 200){
+        int totalLength = getContentLength();
+        #ifdef SPOTIFY_DEBUG
+        Serial.print(F("file length: "));
+        Serial.println(totalLength);
+        #endif
+        if(totalLength > 0){
+            skipHeaders(false);
+            int remaining = totalLength;
+            // This section of code is inspired but the "Web_Jpg"
+            // example of TJpg_Decoder
+            // https://github.com/Bodmer/TJpg_Decoder
+            // -----------
+            uint8_t buff[128] = { 0 };
+            while(client->connected() && (remaining > 0 || remaining == -1)){
+                // Get available data size
+                size_t size = client->available();
+
+                if (size) {
+                    // Read up to 128 bytes
+                    int c = client->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+
+                    // Write it to file
+                    file->write(buff, c);
+
+                    // Calculate remaining bytes
+                    if (remaining > 0) {
+                        remaining -= c;
+                    }
+                }
+                yield();
+            }
+            // ---------
+            #ifdef SPOTIFY_DEBUG
+            Serial.println(F("Finished getting image"));
+            #endif
+            // probably?!
+            status = true;
+        }
+    }
+
+    closeClient();
+
+    return status;
 }
 
-void ArduinoSpotify::skipHeaders()
+int ArduinoSpotify::getContentLength()
+{
+
+    if(client->find("Content-Length:")){
+        int contentLength = client->parseInt();
+        if (_debug)
+        {
+            Serial.print(F("Content-Length: "));
+            Serial.println(contentLength);
+        }
+        return contentLength;
+    } 
+
+    return -1;
+}
+
+void ArduinoSpotify::skipHeaders(bool tossUnexpected)
 {
     // Skip HTTP headers
-    char endOfHeaders[] = "\r\n\r\n";
-    if (!client->find(endOfHeaders))
+    if (!client->find("\r\n\r\n"))
     {
         Serial.println(F("Invalid response"));
         return;
     }
 
-    // Was getting stray characters between the headers and the body
-    // This should toss them away
-    while (client->available() && client->peek() != '{')
-    {
-        char c = 0;
-        client->readBytes(&c, 1);
-        if (_debug)
+    if(tossUnexpected){
+        // Was getting stray characters between the headers and the body
+        // This should toss them away
+        while (client->available() && client->peek() != '{')
         {
-            Serial.print(F("Tossing an unexpected character: "));
-            Serial.println(c);
+            char c = 0;
+            client->readBytes(&c, 1);
+            if (_debug)
+            {
+                Serial.print(F("Tossing an unexpected character: "));
+                Serial.println(c);
+            }
         }
     }
 }

@@ -19,6 +19,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #ifndef ArduinoSpotify_h
 #define ArduinoSpotify_h
 
+// I find setting these types of flags unreliable from the Arduino IDE
+// so uncomment this if its not working for you
+
+#define SPOTIFY_DEBUG 1
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Client.h>
@@ -120,8 +125,9 @@ class ArduinoSpotify
     char *_clientSecret;
     unsigned int timeTokenRefreshed;
     unsigned int tokenTimeToLiveMs;
+    int getContentLength();
     int getHttpStatusCode();
-    void skipHeaders();
+    void skipHeaders(bool tossUnexpected = true);
     void closeClient();
     void parseError();
     const char *requestAccessTokensBody = 
