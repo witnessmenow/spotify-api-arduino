@@ -83,10 +83,10 @@ class ArduinoSpotify
     char* requestAccessTokens(char * code, char * redirectUrl);
     
     // Generic Request Methods
-    int makeGetRequest(char *command);
+    int makeGetRequest(char *command, char* authorization, char *accept = "application/json", char * host = SPOTIFY_HOST);
     int makeRequestWithBody(char *type, char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
     int makePostRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
-    int makePutRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json");
+    int makePutRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
 
     // User methods
     CurrentlyPlaying getCurrentlyPlaying(char *market = "");
@@ -101,6 +101,9 @@ class ArduinoSpotify
     bool playerControl(char *command, char *deviceId, char *body = "");
     bool playerNavigate(char *command, char *deviceId);
     bool seek(int position, char *deviceId = "");
+
+    // Image methods
+    bool getImage(char *imageUrl, Stream *file);
     
     
     int portNumber = 443;

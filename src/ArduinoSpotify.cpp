@@ -40,7 +40,7 @@ int ArduinoSpotify::makeRequestWithBody(char *type, char *command, char* authori
     if (!client->connect(host, portNumber))
     {
         Serial.println(F("Connection failed"));
-        return false;
+        return -1;
     }
 
     // give the esp a breather
@@ -76,15 +76,14 @@ int ArduinoSpotify::makeRequestWithBody(char *type, char *command, char* authori
     if (client->println() == 0)
     {
         Serial.println(F("Failed to send request"));
-        return false;
+        return -2;
     }
 
     int statusCode = getHttpStatusCode();
-    skipHeaders();
     return statusCode;
 }
 
-int ArduinoSpotify::makePutRequest(char *command, char* authorization, char *body, char *contentType)
+int ArduinoSpotify::makePutRequest(char *command, char* authorization, char *body, char *contentType, char *host)
 {
     return makeRequestWithBody("PUT ", command, authorization, body, contentType);
 }
@@ -94,14 +93,14 @@ int ArduinoSpotify::makePostRequest(char *command, char* authorization, char *bo
     return makeRequestWithBody("POST ", command, authorization, body, contentType, host);
 }
 
-int ArduinoSpotify::makeGetRequest(char *command)
+int ArduinoSpotify::makeGetRequest(char *command, char* authorization, char *accept, char *host)
 {
     client->flush();
     client->setTimeout(SPOTIFY_TIMEOUT);
     if (!client->connect(SPOTIFY_HOST, portNumber))
     {
         Serial.println(F("Connection failed"));
-        return false;
+        return -1;
     }
 
     // give the esp a breather
@@ -116,24 +115,26 @@ int ArduinoSpotify::makeGetRequest(char *command)
     client->print(F("Host: "));
     client->println(SPOTIFY_HOST);
 
-    client->println(F("Accept: application/json"));
-    client->println(F("Content-Type: application/json"));
+    if(accept != NULL){
+        client->print(F("Accept: "));
+        client->println(accept);
+    }
 
-    client->print(F("Authorization: "));
-    client->println(_bearerToken);
+    if(authorization != NULL){
+        client->print(F("Authorization: "));
+        client->println(authorization);
+    }
 
     client->println(F("Cache-Control: no-cache"));
 
     if (client->println() == 0)
     {
         Serial.println(F("Failed to send request"));
-        return false;
+        return -2;
     }
 
     int statusCode = getHttpStatusCode();
     
-    // Let the caller of this method parse the JSon from the client
-    skipHeaders();
     return statusCode;
 }
 
@@ -151,6 +152,9 @@ bool ArduinoSpotify::refreshAccessToken(){
     }
 
     int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
+    if(statusCode > 0){
+        skipHeaders();
+    }
     unsigned long now = millis();
     if (_debug)
     {
@@ -199,6 +203,9 @@ char* ArduinoSpotify::requestAccessTokens(char * code, char * redirectUrl){
     }
 
     int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
+    if(statusCode > 0){
+        skipHeaders();
+    }
     unsigned long now = millis();
     if (_debug)
     {
@@ -373,7 +380,13 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
     if(autoTokenRefresh){
         checkAndRefreshAccessToken();
     }
-    if (makeGetRequest(command) == 200)
+
+    int statusCode = makeGetRequest(command, _bearerToken);
+    if(statusCode > 0){
+        skipHeaders();
+    }
+
+    if (statusCode == 200)
     {
         // Allocate DynamicJsonDocument
         DynamicJsonDocument doc(bufferSize);
@@ -415,6 +428,11 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
     }
     closeClient();
     return currentlyPlaying;
+}
+
+bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
+{
+    return false;
 }
 
 void ArduinoSpotify::skipHeaders()
