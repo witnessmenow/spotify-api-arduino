@@ -20,9 +20,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define ArduinoSpotify_h
 
 // I find setting these types of flags unreliable from the Arduino IDE
-// so uncomment this if its not working for you
+// so uncomment this if its not working for you.
+// NOTE: Do not use this option on live-streams, it will reveal your
+// private tokens!
 
-//#define SPOTIFY_DEBUG 1
+// #define SPOTIFY_DEBUG 1
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -115,7 +117,6 @@ class ArduinoSpotify
     int tagArraySize = 10;
     int currentlyPlayingBufferSize = 10000;
     bool autoTokenRefresh = true;
-    bool _debug = false;
     Client *client;
 
   private:
@@ -127,7 +128,7 @@ class ArduinoSpotify
     unsigned int tokenTimeToLiveMs;
     int getContentLength();
     int getHttpStatusCode();
-    void skipHeaders(bool tossUnexpected = true);
+    void skipHeaders(bool tossUnexpectedForJSON = true);
     void closeClient();
     void parseError();
     const char *requestAccessTokensBody = 

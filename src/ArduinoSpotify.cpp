@@ -146,21 +146,21 @@ bool ArduinoSpotify::refreshAccessToken(){
     char body[1000];
     sprintf(body, refreshAccessTokensBody, _refreshToken, _clientId, _clientSecret);
 
-    if (_debug)
-    {
-        Serial.println(body);
-    }
+    #ifdef SPOTIFY_DEBUG
+    Serial.println(body);
+    #endif
 
     int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
     if(statusCode > 0){
         skipHeaders();
     }
     unsigned long now = millis();
-    if (_debug)
-    {
-        Serial.print("status Code");
-        Serial.println(statusCode);
-    }
+
+    #ifdef SPOTIFY_DEBUG
+    Serial.print("status Code");
+    Serial.println(statusCode);
+    #endif
+
     bool refreshed = false;
     if(statusCode == 200){
         DynamicJsonDocument doc(1000);
@@ -197,21 +197,21 @@ char* ArduinoSpotify::requestAccessTokens(char * code, char * redirectUrl){
     char body[1000];
     sprintf(body, requestAccessTokensBody, code, redirectUrl, _clientId, _clientSecret);
 
-    if (_debug)
-    {
-        Serial.println(body);
-    }
+    #ifdef SPOTIFY_DEBUG
+    Serial.println(body);
+    #endif
 
     int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
     if(statusCode > 0){
         skipHeaders();
     }
     unsigned long now = millis();
-    if (_debug)
-    {
-        Serial.print("status Code");
-        Serial.println(statusCode);
-    }
+    
+    #ifdef SPOTIFY_DEBUG
+    Serial.print("status Code");
+    Serial.println(statusCode);
+    #endif
+
     if(statusCode == 200){
         DynamicJsonDocument doc(1000);
         DeserializationError error = deserializeJson(doc, *client);
@@ -291,11 +291,10 @@ bool ArduinoSpotify::playerControl(char *command,char *deviceId, char *body){
         sprintf(command, command, deviceId);
     }
 
-    if (_debug)
-    {
-        Serial.println(command);
-        Serial.println(body);
-    }
+    #ifdef SPOTIFY_DEBUG
+    Serial.println(command);
+    Serial.println(body);
+    #endif
 
     if(autoTokenRefresh){
         checkAndRefreshAccessToken();
@@ -313,10 +312,9 @@ bool ArduinoSpotify::playerNavigate(char *command,char *deviceId){
         sprintf(command, command, deviceId);
     }
 
-    if (_debug)
-    {
-        Serial.println(command);
-    }
+    #ifdef SPOTIFY_DEBUG
+    Serial.println(command);
+    #endif
 
     if(autoTokenRefresh){
         checkAndRefreshAccessToken();
@@ -346,10 +344,9 @@ bool ArduinoSpotify::seek(int position, char *deviceId){
         sprintf(command, command, deviceId);
     }
 
-    if (_debug)
-    {
-        Serial.println(command);
-    }
+    #ifdef SPOTIFY_DEBUG
+    Serial.println(command);
+    #endif
 
     if(autoTokenRefresh){
         checkAndRefreshAccessToken();
@@ -367,10 +364,10 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
         strcat(command, "?market=%s");
         sprintf(command, command, market);
     }
-    if (_debug)
-    {
-        Serial.println(command);
-    }
+
+    #ifdef SPOTIFY_DEBUG
+    Serial.println(command);
+    #endif
 
     // Get from https://arduinojson.org/v6/assistant/
     const size_t bufferSize = currentlyPlayingBufferSize;
@@ -432,38 +429,44 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
 
 bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
 {
+    #ifdef SPOTIFY_DEBUG
+    Serial.print(F("Parsing image URL: "));
+    Serial.println(imageUrl);
+    #endif   
+
     uint8_t lengthOfString = strlen(imageUrl);
 
-    uint8_t hostIndex = 7;
+
+    // We are going to just assume https, that's all I've
+    // seen and I can't imagine a company will go back
+    // to http
+
+    uint8_t protocolLength = 7;
     // looking for the 's' in "https"
     if (imageUrl[4] == 's') {
-        hostIndex = 8; 
+        protocolLength = 8; 
+    } else {
+        Serial.print(F("Url not in expected format: "));
+        Serial.println(imageUrl);
+        Serial.println("(expected it to start with \"https://\")");
+
+        return false;
     }
 
-    char *commandStart = strchr(imageUrl + hostIndex, '/');
-    uint8_t commandIndex = commandStart - imageUrl;
-    uint8_t commandLength = lengthOfString - commandIndex + 1; // need to include the '/'
-    char command[commandLength + 1];
-    strncpy(command, commandStart, commandLength);
-    command[commandLength] = '\0';
+    char *pathStart = strchr(imageUrl + protocolLength, '/');
+    uint8_t pathIndex = pathStart - imageUrl;
+    uint8_t pathLength = lengthOfString - pathIndex + 1; // need to include the '/'
+    char path[pathLength + 1];
+    strncpy(path, pathStart, pathLength);
+    path[pathLength] = '\0';
 
-    uint8_t hostLength = commandStart - (imageUrl + hostIndex);
-    char host[hostLength];
-    strncpy(host, imageUrl + hostIndex, hostLength);
+    uint8_t hostLength = pathIndex - protocolLength;
+    char host[hostLength + 1];
+    strncpy(host, imageUrl + protocolLength, hostLength);
     host[hostLength] = '\0';
     // host is copied to a new string
 
-    char protocol[hostIndex];
-    strncpy(protocol, imageUrl, hostIndex);
-    protocol[hostIndex] = '\0';
-    // protocol is copied to a new string
-
     #ifdef SPOTIFY_DEBUG
-    Serial.print(F("protocol: "));
-    Serial.println(protocol);
-
-    Serial.print(F("len:protocol: "));
-    Serial.println(hostIndex);
 
     Serial.print(F("host: "));
     Serial.println(host);
@@ -471,15 +474,15 @@ bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
     Serial.print(F("len:host:"));
     Serial.println(hostLength);
 
-    Serial.print(F("command: "));
-    Serial.println(command);
+    Serial.print(F("path: "));
+    Serial.println(path);
 
-    Serial.print(F("len:command: "));
-    Serial.println(strlen(command));
+    Serial.print(F("len:path: "));
+    Serial.println(strlen(path));
     #endif
 
     bool status = false;
-    int statusCode = makeGetRequest(command, NULL, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8", host);
+    int statusCode = makeGetRequest(path, NULL, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8", host);
     #ifdef SPOTIFY_DEBUG
     Serial.print(F("statusCode: "));
     Serial.println(statusCode);
@@ -535,18 +538,17 @@ int ArduinoSpotify::getContentLength()
 
     if(client->find("Content-Length:")){
         int contentLength = client->parseInt();
-        if (_debug)
-        {
-            Serial.print(F("Content-Length: "));
-            Serial.println(contentLength);
-        }
+        #ifdef SPOTIFY_DEBUG
+        Serial.print(F("Content-Length: "));
+        Serial.println(contentLength);
+        #endif
         return contentLength;
     } 
 
     return -1;
 }
 
-void ArduinoSpotify::skipHeaders(bool tossUnexpected)
+void ArduinoSpotify::skipHeaders(bool tossUnexpectedForJSON)
 {
     // Skip HTTP headers
     if (!client->find("\r\n\r\n"))
@@ -555,18 +557,17 @@ void ArduinoSpotify::skipHeaders(bool tossUnexpected)
         return;
     }
 
-    if(tossUnexpected){
+    if(tossUnexpectedForJSON){
         // Was getting stray characters between the headers and the body
         // This should toss them away
         while (client->available() && client->peek() != '{')
         {
             char c = 0;
             client->readBytes(&c, 1);
-            if (_debug)
-            {
-                Serial.print(F("Tossing an unexpected character: "));
-                Serial.println(c);
-            }
+            #ifdef SPOTIFY_DEBUG
+            Serial.print(F("Tossing an unexpected character: "));
+            Serial.println(c);
+            #endif
         }
     }
 }
@@ -576,11 +577,10 @@ int ArduinoSpotify::getHttpStatusCode()
     // Check HTTP status
     if(client->find("HTTP/1.1")){
         int statusCode = client->parseInt();
-        if (_debug)
-        {
-            Serial.print(F("Status Code: "));
-            Serial.println(statusCode);
-        }
+        #ifdef SPOTIFY_DEBUG
+        Serial.print(F("Status Code: "));
+        Serial.println(statusCode);
+        #endif
         return statusCode;
     } 
 
@@ -604,10 +604,9 @@ void ArduinoSpotify::closeClient()
 {
     if (client->connected())
     {
-        if (_debug)
-        {
-            Serial.println(F("Closing client"));
-        }
+        #ifdef SPOTIFY_DEBUG
+        Serial.println(F("Closing client"));
+        #endif
         client->stop();
     }
 }

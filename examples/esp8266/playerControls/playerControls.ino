@@ -94,7 +94,7 @@ void setup() {
     client.setFingerprint(SPOTIFY_FINGERPRINT);
 
     // If you want to enable some extra debugging
-    //spotify._debug = true;
+    // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
 
     Serial.println("Refreshing Access Tokens");
     if(!spotify.refreshAccessToken()){
