@@ -32,6 +32,12 @@
 
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
+#include <CertStoreBearSSL.h>
+#include <time.h>
+
+#define FS_NO_GLOBALS
+#include <FS.h>
+#include "LittleFS.h" // Required for BearSSL CertStore
 
 // ----------------------------
 // Additional Libraries - each one of these will need to be installed.
@@ -61,6 +67,31 @@ char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your sp
 
 //------- ---------------------- ------
 
+// A single, global CertStore which can be used by all
+// connections.  Needs to stay live the entire time any of
+// the WiFiClientBearSSLs are present.
+BearSSL::CertStore certStore;
+
+// Set time via NTP, as required for x.509 validation
+void setClock()
+{
+  configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+
+  Serial.print("Waiting for NTP time sync: ");
+  time_t now = time(nullptr);
+  while (now < 8 * 3600 * 2)
+  {
+    delay(500);
+    Serial.print(".");
+    now = time(nullptr);
+  }
+  Serial.println("");
+  struct tm timeinfo;
+  gmtime_r(&now, &timeinfo);
+  Serial.print("Current time: ");
+  Serial.print(asctime(&timeinfo));
+}
+
 WiFiClientSecure client;
 ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
 
@@ -68,6 +99,20 @@ ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
 void setup() {
 
   Serial.begin(115200);
+
+  // Initialise LittleFS, if this fails try .begin(true)
+  // NOTE: I believe this formats it though it will erase everything on
+  // spiffs already! In this example that is not a problem.
+  // I have found once I used the true flag once, I could use it
+  // without the true flag after that.
+
+  if (!LittleFS.begin())
+  {
+    Serial.println("LittleFS initialisation failed!");
+    while (1)
+      yield(); // Stay here twiddling thumbs waiting
+  }
+  Serial.println("\r\nInitialisation done.");
 
     // Set WiFi to station mode and disconnect from an AP if it was Previously
     // connected
@@ -91,7 +136,19 @@ void setup() {
     Serial.println(ip);
 
     // Only avaible in ESP8266 V2.5 RC1 and above
-    client.setFingerprint(SPOTIFY_FINGERPRINT);
+    // client.setFingerprint(SPOTIFY_FINGERPRINT);
+
+    setClock(); // Required for X.509 validation
+
+    int numCerts = certStore.initCertStore(LittleFS, PSTR("/certs.idx"), PSTR("/certs.ar"));
+    Serial.printf("Number of CA certs read: %d\n", numCerts);
+    if (numCerts == 0)
+    {
+      Serial.printf("No certs found. Did you run certs-from-mozilla.py and upload the LittleFS directory before running?\n");
+      return; // Can't connect to anything w/o certs!
+    }
+
+    client.setCertStore(&certStore);
 
     // If you want to enable some extra debugging
     // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
