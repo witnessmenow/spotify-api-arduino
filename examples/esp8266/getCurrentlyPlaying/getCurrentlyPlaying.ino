@@ -138,13 +138,19 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
         Serial.println(currentlyPlaying.albumUri);
         Serial.println();
 
-        Serial.print("Album Image: ");
-        Serial.println(currentlyPlaying.smallestImage.url);
-        Serial.print("Dimensions: ");
-        Serial.print(currentlyPlaying.smallestImage.width);
-        Serial.print(" x ");
-        Serial.print(currentlyPlaying.smallestImage.height);
-        Serial.println();
+        // will be in order of widest to narrowest
+        // currentlyPlaying.numImages is the number of images that
+        // are stored 
+        for (int i = 0; i < currentlyPlaying.numImages; i++) {
+            Serial.println("------------------------");
+            Serial.print("Album Image: ");
+            Serial.println(currentlyPlaying.albumImages[i].url);
+            Serial.print("Dimensions: ");
+            Serial.print(currentlyPlaying.albumImages[i].width);
+            Serial.print(" x ");
+            Serial.print(currentlyPlaying.albumImages[i].height);
+            Serial.println();
+        }
 
         Serial.println("------------------------");
     }

@@ -32,8 +32,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_HOST "api.spotify.com"
 #define SPOTIFY_ACCOUNTS_HOST "accounts.spotify.com"
-// Fingerprint correct as of May 4th 2020
-#define SPOTIFY_FINGERPRINT "AB BC 7C 9B 7A D8 5D 98 8B B2 72 A4 4C 13 47 9A 00 2F 70 B5"
+// Fingerprint correct as of July 23rd, 2020
+#define SPOTIFY_FINGERPRINT "B9 79 6B CE FD 61 21 97 A7 02 90 EE DA CD F0 A0 44 13 0E EB"
 #define SPOTIFY_TIMEOUT 2000
 
 
@@ -54,6 +54,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
+#define SPOTIFY_NUM_ALBUM_IMAGES 3
+
 enum RepeatOptions { repeat_track, repeat_context, repeat_off };
 
 struct SpotifyImage
@@ -71,7 +73,8 @@ struct CurrentlyPlaying
     char *albumUri;
     char *trackName;
     char *trackUri;
-    SpotifyImage smallestImage;
+    SpotifyImage albumImages[3];
+    int numImages;
     bool isPlaying;
 
     bool error;

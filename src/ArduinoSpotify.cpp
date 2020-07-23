@@ -404,11 +404,21 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
             JsonArray images = item["album"]["images"];
 
             // Images are returned in order of width, so last should be smallest.
-            int indexOfSmallest = images.size() - 1;
+            int numImages = images.size();
+            int startingIndex = 0;
+            if(numImages > SPOTIFY_NUM_ALBUM_IMAGES){
+                startingIndex = numImages - SPOTIFY_NUM_ALBUM_IMAGES;
+                currentlyPlaying.numImages = SPOTIFY_NUM_ALBUM_IMAGES;
+            } else {
+                currentlyPlaying.numImages = numImages;
+            }
 
-            currentlyPlaying.smallestImage.height = images[indexOfSmallest]["height"].as<int>(); 
-            currentlyPlaying.smallestImage.width = images[indexOfSmallest]["width"].as<int>(); 
-            currentlyPlaying.smallestImage.url = (char *) images[indexOfSmallest]["url"].as<char *>(); 
+            for(int i = 0; i < numImages; i++){
+                int adjustedIndex = startingIndex + i;
+                currentlyPlaying.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
+                currentlyPlaying.albumImages[i].width = images[adjustedIndex]["width"].as<int>(); 
+                currentlyPlaying.albumImages[i].url = (char *) images[adjustedIndex]["url"].as<char *>(); 
+            }
 
             currentlyPlaying.trackName = (char *) item["name"].as<char *>(); 
             currentlyPlaying.trackUri = (char *) item["uri"].as<char *>(); 
@@ -441,21 +451,19 @@ bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
     // seen and I can't imagine a company will go back
     // to http
 
-    uint8_t protocolLength = 7;
-    // looking for the 's' in "https"
-    if (imageUrl[4] == 's') {
-        protocolLength = 8; 
-    } else {
+    if (strncmp(imageUrl, "https://", 8) != 0) 
+    {
         Serial.print(F("Url not in expected format: "));
         Serial.println(imageUrl);
         Serial.println("(expected it to start with \"https://\")");
-
         return false;
     }
 
+    uint8_t protocolLength = 8;
+
     char *pathStart = strchr(imageUrl + protocolLength, '/');
     uint8_t pathIndex = pathStart - imageUrl;
-    uint8_t pathLength = lengthOfString - pathIndex + 1; // need to include the '/'
+    uint8_t pathLength = lengthOfString - pathIndex;
     char path[pathLength + 1];
     strncpy(path, pathStart, pathLength);
     path[pathLength] = '\0';
@@ -464,7 +472,6 @@ bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
     char host[hostLength + 1];
     strncpy(host, imageUrl + protocolLength, hostLength);
     host[hostLength] = '\0';
-    // host is copied to a new string
 
     #ifdef SPOTIFY_DEBUG
 

@@ -205,47 +205,53 @@ int displayImage(char *albumArtUrl) {
 
 void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
 {
-  if (!currentlyPlaying.error)
-  {
-    Serial.println("--------- Currently Playing ---------");
-
-
-    Serial.print("Is Playing: ");
-    if (currentlyPlaying.isPlaying)
+    if (!currentlyPlaying.error)
     {
-      Serial.println("Yes");
-    } else {
-      Serial.println("No");
+        Serial.println("--------- Currently Playing ---------");
+
+
+        Serial.print("Is Playing: ");
+        if (currentlyPlaying.isPlaying)
+        {
+        Serial.println("Yes");
+        } else {
+        Serial.println("No");
+        }
+
+        Serial.print("Track: ");
+        Serial.println(currentlyPlaying.trackName);
+        Serial.print("Track URI: ");
+        Serial.println(currentlyPlaying.trackUri);
+        Serial.println();
+
+        Serial.print("Artist: ");
+        Serial.println(currentlyPlaying.firstArtistName);
+        Serial.print("Artist URI: ");
+        Serial.println(currentlyPlaying.firstArtistUri);
+        Serial.println();
+
+        Serial.print("Album: ");
+        Serial.println(currentlyPlaying.albumName);
+        Serial.print("Album URI: ");
+        Serial.println(currentlyPlaying.albumUri);
+        Serial.println();
+
+        // will be in order of widest to narrowest
+        // currentlyPlaying.numImages is the number of images that
+        // are stored 
+        for (int i = 0; i < currentlyPlaying.numImages; i++) {
+            Serial.println("------------------------");
+            Serial.print("Album Image: ");
+            Serial.println(currentlyPlaying.albumImages[i].url);
+            Serial.print("Dimensions: ");
+            Serial.print(currentlyPlaying.albumImages[i].width);
+            Serial.print(" x ");
+            Serial.print(currentlyPlaying.albumImages[i].height);
+            Serial.println();
+        }
+
+        Serial.println("------------------------");
     }
-
-    Serial.print("Track: ");
-    Serial.println(currentlyPlaying.trackName);
-    Serial.print("Track URI: ");
-    Serial.println(currentlyPlaying.trackUri);
-    Serial.println();
-
-    Serial.print("Artist: ");
-    Serial.println(currentlyPlaying.firstArtistName);
-    Serial.print("Artist URI: ");
-    Serial.println(currentlyPlaying.firstArtistUri);
-    Serial.println();
-
-    Serial.print("Album: ");
-    Serial.println(currentlyPlaying.albumName);
-    Serial.print("Album URI: ");
-    Serial.println(currentlyPlaying.albumUri);
-    Serial.println();
-
-    Serial.print("Album Image: ");
-    Serial.println(currentlyPlaying.smallestImage.url);
-    Serial.print("Dimensions: ");
-    Serial.print(currentlyPlaying.smallestImage.width);
-    Serial.print(" x ");
-    Serial.print(currentlyPlaying.smallestImage.height);
-    Serial.println();
-
-    Serial.println("------------------------");
-  }
 }
 
 void loop() {
@@ -260,10 +266,13 @@ void loop() {
     if (!currentlyPlaying.error)
     {
       printCurrentlyPlayingToSerial(currentlyPlaying);
-      String newAlbum = String(currentlyPlaying.smallestImage.url);
+
+      // Smallest (narrowest) image will always be last.
+      SpotifyImage smallestImage = currentlyPlaying.albumImages[currentlyPlaying.numImages - 1];
+      String newAlbum = String(smallestImage.url);
       if (newAlbum != lastAlbumArtUrl) {
         Serial.println("Updating Art");
-        int displayImageResult = displayImage(currentlyPlaying.smallestImage.url);
+        int displayImageResult = displayImage(smallestImage.url);
         if (displayImageResult == 0) {
           lastAlbumArtUrl = newAlbum;
         } else {
