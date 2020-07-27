@@ -282,13 +282,14 @@ bool ArduinoSpotify::playerControl(char *command,char *deviceId, char *body){
     if (deviceId != ""){
         char * questionMarkPointer;
         questionMarkPointer = strchr(command,'?');
+        char deviceIdBuff[50];
         if(questionMarkPointer == NULL){
-            strcat(command, "?deviceId=%s");
+            sprintf(deviceIdBuff, "?deviceId=%s", deviceId);
         } else {
             // params already started
-            strcat(command, "&deviceId=%s");
+            sprintf(deviceIdBuff, "&deviceId=%s", deviceId);
         }
-        sprintf(command, command, deviceId);
+        strcat(command, deviceIdBuff);
     }
 
     #ifdef SPOTIFY_DEBUG
@@ -308,8 +309,9 @@ bool ArduinoSpotify::playerControl(char *command,char *deviceId, char *body){
 
 bool ArduinoSpotify::playerNavigate(char *command,char *deviceId){
     if (deviceId != ""){
-        strcat(command, "?deviceId=%s");
-        sprintf(command, command, deviceId);
+        char deviceIdBuff[50];
+        sprintf(deviceIdBuff, "?deviceId=%s", deviceId);
+        strcat(command, deviceIdBuff);
     }
 
     #ifdef SPOTIFY_DEBUG
@@ -337,11 +339,12 @@ bool ArduinoSpotify::previousTrack(char *deviceId){
 }
 bool ArduinoSpotify::seek(int position, char *deviceId){
     char command[100] = SPOTIFY_SEEK_ENDPOINT;
-    strcat(command, "?position_ms=%d");
-    sprintf(command, command, position);
+    char tempBuff[100];
+    sprintf(tempBuff, "?position_ms=%d", position);
+    strcat(command, tempBuff);
     if (deviceId != ""){
-        strcat(command, "?deviceId=%s");
-        sprintf(command, command, deviceId);
+        sprintf(tempBuff, "?deviceId=%s", deviceId);
+        strcat(command, tempBuff);
     }
 
     #ifdef SPOTIFY_DEBUG
@@ -361,8 +364,9 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
 {
     char command[100] = SPOTIFY_CURRENTLY_PLAYING_ENDPOINT;
     if (market != ""){
-        strcat(command, "?market=%s");
-        sprintf(command, command, market);
+        char marketBuff[30];
+        sprintf(marketBuff, "?market=%s", market);
+        strcat(command, marketBuff);
     }
 
     #ifdef SPOTIFY_DEBUG
