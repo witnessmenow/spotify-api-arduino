@@ -441,6 +441,76 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
     return currentlyPlaying;
 }
 
+PlayerDetails ArduinoSpotify::getPlayerDetails(char *market)
+{
+    char command[100] = SPOTIFY_PLAYER_ENDPOINT;
+    if (market != ""){
+        char marketBuff[30];
+        sprintf(marketBuff, "?market=%s", market);
+        strcat(command, marketBuff);
+    }
+
+    #ifdef SPOTIFY_DEBUG
+    Serial.println(command);
+    #endif
+
+    // Get from https://arduinojson.org/v6/assistant/
+    const size_t bufferSize = playerDetailsBufferSize;
+    PlayerDetails playerDetails;
+    // This flag will get cleared if all goes well
+    playerDetails.error = true;
+    if(autoTokenRefresh){
+        checkAndRefreshAccessToken();
+    }
+
+    int statusCode = makeGetRequest(command, _bearerToken);
+    if(statusCode > 0){
+        skipHeaders();
+    }
+
+    if (statusCode == 200)
+    {
+        // Allocate DynamicJsonDocument
+        DynamicJsonDocument doc(bufferSize);
+
+        // Parse JSON object
+        DeserializationError error = deserializeJson(doc, *client);
+        if (!error)
+        {
+            JsonObject device = doc["device"];
+            playerDetails.deviceId = (char *) device["id"].as<char *>();
+            playerDetails.deviceName = (char *) device["name"].as<char *>();
+            playerDetails.isActive = device["is_active"].as<bool>(); 
+            playerDetails.isRestricted = device["is_restricted"].as<bool>();
+            playerDetails.volumePrecent =  device["volume_percent"].as<int>();
+
+            playerDetails.progressMs = (char *) doc["progress_ms"].as<char *>(); 
+            playerDetails.isPlaying = doc["is_playing"].as<bool>();
+
+            playerDetails.shuffleState = doc["shuffle_state"].as<bool>();
+
+            const char* repeat_state = doc["repeat_state"]; // "off"
+
+            if (strncmp(repeat_state, "track", 5) == 0) {
+                playerDetails.repeateState = repeat_track;
+            } else if (strncmp(repeat_state, "context", 7) == 0) {
+                playerDetails.repeateState = repeat_context;
+            } else {
+                playerDetails.repeateState = repeat_off;
+            }
+
+            playerDetails.error = false;
+        }
+        else
+        {
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(error.c_str());
+        }
+    }
+    closeClient();
+    return playerDetails;
+}
+
 bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
 {
     #ifdef SPOTIFY_DEBUG

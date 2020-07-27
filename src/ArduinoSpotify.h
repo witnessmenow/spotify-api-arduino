@@ -39,6 +39,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
 
+#define SPOTIFY_PLAYER_ENDPOINT "/v1/me/player"
+
 #define SPOTIFY_PLAY_ENDPOINT "/v1/me/player/play"
 #define SPOTIFY_PAUSE_ENDPOINT "/v1/me/player/pause"
 #define SPOTIFY_VOLUME_ENDPOINT "/v1/me/player/volume?volume_percent=%d"
@@ -49,8 +51,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_PREVIOUS_TRACK_ENDPOINT "/v1/me/player/previous"
 
 #define SPOTIFY_SEEK_ENDPOINT "/v1/me/player/seek"
-//const char currentlyPlayingEndpoint[] = "/v1/me/player/currently-playing";
-//const char playerNextTrackEndpoint[] = "/v1/me/player/next";
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
@@ -65,19 +65,34 @@ struct SpotifyImage
   char *url;
 };
 
+struct PlayerDetails
+{
+  char *deviceId;
+  char *deviceName;
+  bool isActive;
+  bool isRestricted;
+  int volumePrecent;
+  char *progressMs; //is a string in the Json return
+  bool isPlaying;
+  RepeatOptions repeateState;
+  bool shuffleState;
+
+  bool error;
+};
+
 struct CurrentlyPlaying
 {
-    char *firstArtistName;
-    char *firstArtistUri;
-    char *albumName;
-    char *albumUri;
-    char *trackName;
-    char *trackUri;
-    SpotifyImage albumImages[3];
-    int numImages;
-    bool isPlaying;
+  char *firstArtistName;
+  char *firstArtistUri;
+  char *albumName;
+  char *albumUri;
+  char *trackName;
+  char *trackUri;
+  SpotifyImage albumImages[3];
+  int numImages;
+  bool isPlaying;
 
-    bool error;
+  bool error;
 };
 
 class ArduinoSpotify
@@ -100,6 +115,7 @@ class ArduinoSpotify
 
     // User methods
     CurrentlyPlaying getCurrentlyPlaying(char *market = "");
+    PlayerDetails getPlayerDetails(char *market = "");
     bool play(char *deviceId = "");
     bool playAdvanced(char *body, char *deviceId = "");
     bool pause(char *deviceId = "");
@@ -119,6 +135,7 @@ class ArduinoSpotify
     int portNumber = 443;
     int tagArraySize = 10;
     int currentlyPlayingBufferSize = 10000;
+    int playerDetailsBufferSize = 10000;
     bool autoTokenRefresh = true;
     Client *client;
 
