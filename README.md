@@ -1,5 +1,5 @@
 # arduino-spotify-api
-Arduino library for integrating with the Spotify Web-API (Does not play music)
+Arduino library for integrating with a subset of the [Spotify Web-API](https://developer.spotify.com/documentation/web-api/reference/) (Does not play music)
 
 **Work in progress library - expect changes!**
 
@@ -18,6 +18,7 @@ The Library supports the following features:
     - Previous
     - Seek
     - Play (basic version, basically resumes a paused track)
+    - Play Advanced (play given song, album, artist)
     - Pause
     - Set Volume (doesn't seem to work on my phone, works on desktop though)
     - Set Repeat Modes

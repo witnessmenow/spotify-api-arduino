@@ -72,7 +72,7 @@ struct PlayerDetails
   bool isActive;
   bool isRestricted;
   int volumePrecent;
-  char *progressMs; //is a string in the Json return
+  long progressMs;
   bool isPlaying;
   RepeatOptions repeateState;
   bool shuffleState;
@@ -91,6 +91,8 @@ struct CurrentlyPlaying
   SpotifyImage albumImages[3];
   int numImages;
   bool isPlaying;
+  long progressMs;
+  long duraitonMs;
 
   bool error;
 };

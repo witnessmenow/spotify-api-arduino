@@ -138,6 +138,27 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
         Serial.println(currentlyPlaying.albumUri);
         Serial.println();
 
+        long progress = currentlyPlaying.progressMs; // duration passed in the song
+        long duration = currentlyPlaying.duraitonMs; // Length of Song
+        Serial.print("Elapsed time of song (ms): ");
+        Serial.print(progress);
+        Serial.print(" of ");
+        Serial.println(duration);
+        Serial.println();
+
+        float precentage = ((float) progress / (float) duration) * 100;
+        int clampedPrecentage = (int)precentage;
+        Serial.print("<");
+        for (int j = 0; j < 50; j++){
+        if(clampedPrecentage >= (j*2)){
+            Serial.print("=");
+        } else {
+            Serial.print("-");
+        }
+        }
+        Serial.println(">");
+        Serial.println();
+
         // will be in order of widest to narrowest
         // currentlyPlaying.numImages is the number of images that
         // are stored 

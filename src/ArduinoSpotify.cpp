@@ -429,6 +429,9 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(char *market)
 
             currentlyPlaying.isPlaying = doc["is_playing"].as<bool>();
 
+            currentlyPlaying.progressMs = doc["progress_ms"].as<long>();
+            currentlyPlaying.duraitonMs = item["duration_ms"].as<long>();
+
             currentlyPlaying.error = false;
         }
         else
@@ -484,7 +487,7 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(char *market)
             playerDetails.isRestricted = device["is_restricted"].as<bool>();
             playerDetails.volumePrecent =  device["volume_percent"].as<int>();
 
-            playerDetails.progressMs = (char *) doc["progress_ms"].as<char *>(); 
+            playerDetails.progressMs = doc["progress_ms"].as<long>(); 
             playerDetails.isPlaying = doc["is_playing"].as<bool>();
 
             playerDetails.shuffleState = doc["shuffle_state"].as<bool>();

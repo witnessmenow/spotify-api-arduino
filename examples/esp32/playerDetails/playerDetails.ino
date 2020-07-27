@@ -134,7 +134,7 @@ void printPlayerDetailsToSerial(PlayerDetails playerDetails)
         Serial.println(playerDetails.volumePrecent);
 
         Serial.print("Progress (Ms): ");
-        Serial.println(playerDetails.progressMs); //this is a char *, as spotify returns a string. Can be blank
+        Serial.println(playerDetails.progressMs);
 
         Serial.print("Is Playing: ");
         if (playerDetails.isPlaying)
