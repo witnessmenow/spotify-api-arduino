@@ -167,7 +167,8 @@ void setup() {
     Serial.println("MDNS responder started");
   }
 
-  spotify._debug = true;
+  // If you want to enable some extra debugging
+  // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
   client.setFingerprint(SPOTIFY_FINGERPRINT);
 
   server.on("/", handleRoot);

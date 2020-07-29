@@ -168,7 +168,8 @@ void setup() {
     Serial.println("MDNS responder started");
   }
 
-  spotify._debug = true;
+  // If you want to enable some extra debugging
+  // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
   client.setCACert(spotify_server_cert);
 
   // Building up callback URL using IP address.
