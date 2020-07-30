@@ -36,7 +36,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_FINGERPRINT "B9 79 6B CE FD 61 21 97 A7 02 90 EE DA CD F0 A0 44 13 0E EB"
 #define SPOTIFY_TIMEOUT 2000
 
-
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
 
 #define SPOTIFY_PLAYER_ENDPOINT "/v1/me/player"
@@ -56,7 +55,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_NUM_ALBUM_IMAGES 3
 
-enum RepeatOptions { repeat_track, repeat_context, repeat_off };
+enum RepeatOptions
+{
+  repeat_track,
+  repeat_context,
+  repeat_off
+};
 
 struct SpotifyImage
 {
@@ -99,66 +103,63 @@ struct CurrentlyPlaying
 
 class ArduinoSpotify
 {
-  public:
-    ArduinoSpotify(Client &client, char *bearerToken);
-    ArduinoSpotify(Client &client, char *clientId, char *clientSecret, char *refreshToken = "");
-    
-    // Auth Methods
-    void setRefreshToken(char *refreshToken);
-    bool refreshAccessToken();
-    bool checkAndRefreshAccessToken();
-    char* requestAccessTokens(char * code, char * redirectUrl);
-    
-    // Generic Request Methods
-    int makeGetRequest(char *command, char* authorization, char *accept = "application/json", char * host = SPOTIFY_HOST);
-    int makeRequestWithBody(char *type, char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
-    int makePostRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
-    int makePutRequest(char *command, char* authorization, char *body = "", char *contentType = "application/json", char * host = SPOTIFY_HOST);
+public:
+  ArduinoSpotify(Client &client, char *bearerToken);
+  ArduinoSpotify(Client &client, const char *clientId, const char *clientSecret, const char *refreshToken = "");
 
-    // User methods
-    CurrentlyPlaying getCurrentlyPlaying(char *market = "");
-    PlayerDetails getPlayerDetails(char *market = "");
-    bool play(char *deviceId = "");
-    bool playAdvanced(char *body, char *deviceId = "");
-    bool pause(char *deviceId = "");
-    bool setVolume(int volume, char *deviceId = "");
-    bool toggleShuffle(bool shuffle, char *deviceId = "");
-    bool setRepeatMode(RepeatOptions repeat, char *deviceId = "");
-    bool nextTrack(char *deviceId = "");
-    bool previousTrack(char *deviceId = "");
-    bool playerControl(char *command, char *deviceId, char *body = "");
-    bool playerNavigate(char *command, char *deviceId);
-    bool seek(int position, char *deviceId = "");
+  // Auth Methods
+  void setRefreshToken(const char *refreshToken);
+  bool refreshAccessToken();
+  bool checkAndRefreshAccessToken();
+  const char *requestAccessTokens(const char *code, const char *redirectUrl);
 
-    // Image methods
-    bool getImage(char *imageUrl, Stream *file);
-    
-    
-    int portNumber = 443;
-    int tagArraySize = 10;
-    int currentlyPlayingBufferSize = 10000;
-    int playerDetailsBufferSize = 10000;
-    bool autoTokenRefresh = true;
-    Client *client;
+  // Generic Request Methods
+  int makeGetRequest(const char *command, const char *authorization, const char *accept = "application/json", const char *host = SPOTIFY_HOST);
+  int makeRequestWithBody(const char *type, const char *command, const char *authorization, const char *body = "", const char *contentType = "application/json", const char *host = SPOTIFY_HOST);
+  int makePostRequest(const char *command, const char *authorization, const char *body = "", const char *contentType = "application/json", const char *host = SPOTIFY_HOST);
+  int makePutRequest(const char *command, const char *authorization, const char *body = "", const char *contentType = "application/json", const char *host = SPOTIFY_HOST);
 
-  private:
-    char _bearerToken[200];
-    char *_refreshToken;
-    char *_clientId;
-    char *_clientSecret;
-    unsigned int timeTokenRefreshed;
-    unsigned int tokenTimeToLiveMs;
-    int getContentLength();
-    int getHttpStatusCode();
-    void skipHeaders(bool tossUnexpectedForJSON = true);
-    void closeClient();
-    void parseError();
-    const char *requestAccessTokensBody = 
-    R"(grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s)"
-    ;
-    const char *refreshAccessTokensBody = 
-    R"(grant_type=refresh_token&refresh_token=%s&client_id=%s&client_secret=%s)"
-    ;
+  // User methods
+  CurrentlyPlaying getCurrentlyPlaying(const char *market = "");
+  PlayerDetails getPlayerDetails(const char *market = "");
+  bool play(const char *deviceId = "");
+  bool playAdvanced(char *body, const char *deviceId = "");
+  bool pause(const char *deviceId = "");
+  bool setVolume(int volume, const char *deviceId = "");
+  bool toggleShuffle(bool shuffle, const char *deviceId = "");
+  bool setRepeatMode(RepeatOptions repeat, const char *deviceId = "");
+  bool nextTrack(const char *deviceId = "");
+  bool previousTrack(const char *deviceId = "");
+  bool playerControl(char *command, const char *deviceId = "", const char *body = "");
+  bool playerNavigate(char *command, const char *deviceId = "");
+  bool seek(int position, const char *deviceId = "");
+
+  // Image methods
+  bool getImage(char *imageUrl, Stream *file);
+
+  int portNumber = 443;
+  int tagArraySize = 10;
+  int currentlyPlayingBufferSize = 10000;
+  int playerDetailsBufferSize = 10000;
+  bool autoTokenRefresh = true;
+  Client *client;
+
+private:
+  char _bearerToken[200];
+  const char *_refreshToken;
+  const char *_clientId;
+  const char *_clientSecret;
+  unsigned int timeTokenRefreshed;
+  unsigned int tokenTimeToLiveMs;
+  int getContentLength();
+  int getHttpStatusCode();
+  void skipHeaders(bool tossUnexpectedForJSON = true);
+  void closeClient();
+  void parseError();
+  const char *requestAccessTokensBody =
+      R"(grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s)";
+  const char *refreshAccessTokensBody =
+      R"(grant_type=refresh_token&refresh_token=%s&client_id=%s&client_secret=%s)";
 };
 
 #endif
