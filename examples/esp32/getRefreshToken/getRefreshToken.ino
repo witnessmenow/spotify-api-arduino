@@ -33,7 +33,6 @@
     Twitter: https://twitter.com/witnessmenow
  *******************************************************************/
 
-
 // ----------------------------
 // Standard Libraries
 // ----------------------------
@@ -63,9 +62,9 @@
 
 //------- Replace the following! ------
 
-char ssid[] = "SSID";         // your network SSID (name)
-char password[] = "password"; // your network password
-char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify APP
+char ssid[] = "SSID";                           // your network SSID (name)
+char password[] = "password";                   // your network password
+char clientId[] = "56t4373258u3405u43u543";     // Your client ID of your spotify APP
 char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your spotify APP (Do Not share this!)
 
 char scope[] = "user-read-playback-state%20user-modify-playback-state";
@@ -82,12 +81,11 @@ char callbackURI[100];
 
 WebServer server(80);
 
-
 WiFiClientSecure client;
 ArduinoSpotify spotify(client, clientId, clientSecret);
 
 const char *webpageTemplate =
-  R"(
+    R"(
 <!DOCTYPE html>
 <html>
   <head>
@@ -103,30 +101,38 @@ const char *webpageTemplate =
 </html>
 )";
 
-void handleRoot() {
+void handleRoot()
+{
   char webpage[800];
   sprintf(webpage, webpageTemplate, clientId, callbackURI, scope);
   server.send(200, "text/html", webpage);
 }
 
-void handleCallback() {
+void handleCallback()
+{
   String code = "";
-  char *refreshToken = NULL;
-  for (uint8_t i = 0; i < server.args(); i++) {
-    if (server.argName(i) == "code") {
+  const char *refreshToken = NULL;
+  for (uint8_t i = 0; i < server.args(); i++)
+  {
+    if (server.argName(i) == "code")
+    {
       code = server.arg(i);
-      refreshToken = spotify.requestAccessTokens((char*) code.c_str(), callbackURI);
+      refreshToken = spotify.requestAccessTokens(code.c_str(), callbackURI);
     }
   }
 
-  if(refreshToken != NULL){
+  if (refreshToken != NULL)
+  {
     server.send(200, "text/plain", refreshToken);
-  } else {
-    server.send(404, "text/plain", "Failed to load token, check serial monitor"); 
+  }
+  else
+  {
+    server.send(404, "text/plain", "Failed to load token, check serial monitor");
   }
 }
 
-void handleNotFound() {
+void handleNotFound()
+{
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += server.uri();
@@ -136,7 +142,8 @@ void handleNotFound() {
   message += server.args();
   message += "\n";
 
-  for (uint8_t i = 0; i < server.args(); i++) {
+  for (uint8_t i = 0; i < server.args(); i++)
+  {
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
 
@@ -144,7 +151,8 @@ void handleNotFound() {
   server.send(404, "text/plain", message);
 }
 
-void setup() {
+void setup()
+{
 
   Serial.begin(115200);
 
@@ -153,7 +161,8 @@ void setup() {
   Serial.println("");
 
   // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
@@ -164,7 +173,8 @@ void setup() {
   IPAddress ipAddress = WiFi.localIP();
   Serial.println(ipAddress);
 
-  if (MDNS.begin("arduino")) {
+  if (MDNS.begin("arduino"))
+  {
     Serial.println("MDNS responder started");
   }
 
@@ -182,8 +192,7 @@ void setup() {
   Serial.println("HTTP server started");
 }
 
-
-
-void loop() {
+void loop()
+{
   server.handleClient();
 }
