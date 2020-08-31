@@ -224,12 +224,14 @@ void setup() {
     Serial.println("Playing Artist");
     playArtist();
     delay(10000);
-    playPlaylist();
     Serial.println("Playing Playlist");
+    playPlaylist();
     delay(10000);
-    playPlaylistOffset();
-    Serial.println("Playing Playlist with an offset");
-
+    Serial.println("Playing track number on Playlist");
+    specifyTrackNumOfPlaylist();
+    delay(10000)
+    Serial.println("Playing specific track on Playlist")
+    specifyTrackOfPlaylist();
 
 }
 
