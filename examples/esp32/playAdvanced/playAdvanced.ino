@@ -135,6 +135,39 @@ void playArtist(){
     }
 }
 
+void playPlaylist(){
+    char samplePlaylist[] = "spotify:playlist:37i9dQZF1DZ06evO05tE88";
+
+    char body[100];
+    sprintf(body, "{\"context_uri\" : \"%s\"}", samplePlaylist);
+    if (spotify.playPlaylist(body)) {
+        Serial.println("sent!");
+    }
+}
+
+void specifyTrackNumOfPlaylist(){
+    char samplePlaylist[] = "spotify:playlist:37i9dQZF1DZ06evO05tE88";
+    // The position has an index of 0, so passing in 31
+    // like this will actually play the 32nd song.
+    int playlistTrackNum = 31;
+
+    char body[200];
+    sprintf(body, "{\"context_uri\" : \"%s\", \"offset\": {\"position\": %d}}", samplePlaylist, playlistTrackNum);
+    if (spotify.specifyTrackNumOfPlaylist(body)) {
+        Serial.println("sent!");
+    }
+}
+
+void specifyTrackOfPlaylist(){
+    char samplePlaylist[] = "spotify:playlist:37i9dQZF1DZ06evO05tE88";
+    char trackOnPlaylist[] = "spotify:track:6vW1WpedCmV4gtOijSoQV3";
+
+    char body[200];
+    sprintf(body, "{\"context_uri\" : \"%s\", \"offset\": {\"uri\": \"%s\"}}", samplePlaylist, trackOnPlaylist);
+    if (spotify.specifyTrackOfPlaylist(body)) {
+        Serial.println("sent!");
+    }
+}
 
 void setup() {
 
@@ -190,6 +223,13 @@ void setup() {
     delay(10000);
     Serial.println("Playing Artist");
     playArtist();
+    delay(10000);
+    playPlaylist();
+    Serial.println("Playing Playlist");
+    delay(10000);
+    playPlaylistOffset();
+    Serial.println("Playing Playlist with an offset");
+
 
 }
 
