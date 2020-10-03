@@ -312,7 +312,7 @@ bool ArduinoSpotify::setRepeatMode(RepeatOptions repeat, const char *deviceId)
 
 bool ArduinoSpotify::playerControl(char *command, const char *deviceId, const char *body)
 {
-    if (deviceId != "")
+    if (deviceId[0] != 0)
     {
         char *questionMarkPointer;
         questionMarkPointer = strchr(command, '?');
@@ -347,7 +347,7 @@ bool ArduinoSpotify::playerControl(char *command, const char *deviceId, const ch
 
 bool ArduinoSpotify::playerNavigate(char *command, const char *deviceId)
 {
-    if (deviceId != "")
+    if (deviceId[0] != 0)
     {
         char deviceIdBuff[50];
         sprintf(deviceIdBuff, "?deviceId=%s", deviceId);
@@ -386,7 +386,7 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
     char tempBuff[100];
     sprintf(tempBuff, "?position_ms=%d", position);
     strcat(command, tempBuff);
-    if (deviceId != "")
+    if (deviceId[0] != 0)
     {
         sprintf(tempBuff, "?deviceId=%s", deviceId);
         strcat(command, tempBuff);
@@ -409,7 +409,7 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
 CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 {
     char command[100] = SPOTIFY_CURRENTLY_PLAYING_ENDPOINT;
-    if (market != "")
+    if (market[0] != 0)
     {
         char marketBuff[30];
         sprintf(marketBuff, "?market=%s", market);
@@ -500,7 +500,7 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
 {
     char command[100] = SPOTIFY_PLAYER_ENDPOINT;
-    if (market != "")
+    if (market[0] != 0)
     {
         char marketBuff[30];
         sprintf(marketBuff, "?market=%s", market);
