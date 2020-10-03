@@ -1,4 +1,5 @@
 # arduino-spotify-api
+![License](https://img.shields.io/github/license/witnessmenow/arduino-spotify-api)
 Arduino library for integrating with a subset of the [Spotify Web-API](https://developer.spotify.com/documentation/web-api/reference/) (Does not play music)
 
 **Work in progress library - expect changes!**
