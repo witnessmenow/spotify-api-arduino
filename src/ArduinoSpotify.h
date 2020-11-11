@@ -70,13 +70,13 @@ struct SpotifyImage
 {
   int height;
   int width;
-  char *url;
+  char url[101] = {0};
 };
 
 struct SpotifyDevice
 {
   char id[41] = {0};
-  char name[41]= {0};
+  char name[41] = {0};
   char type[41] = {0};
   bool isActive;
   bool isRestricted;
@@ -98,12 +98,12 @@ struct PlayerDetails
 
 struct CurrentlyPlaying
 {
-  char *firstArtistName;
-  char *firstArtistUri;
-  char *albumName;
-  char *albumUri;
-  char *trackName;
-  char *trackUri;
+  char firstArtistName[51] = {0};
+  char firstArtistUri[41] = {0};
+  char albumName[51] = {0};
+  char albumUri[41] = {0};
+  char trackName[51] = {0};
+  char trackUri[41] = {0};
   SpotifyImage albumImages[3];
   int numImages;
   bool isPlaying;

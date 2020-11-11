@@ -535,11 +535,11 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
             JsonObject item = doc["item"];
             JsonObject firstArtist = item["album"]["artists"][0];
 
-            currentlyPlaying.firstArtistName = (char *)firstArtist["name"].as<char *>();
-            currentlyPlaying.firstArtistUri = (char *)firstArtist["uri"].as<char *>();
+            strncpy(currentlyPlaying.firstArtistName, firstArtist["name"].as<char *>(), 50);
+            strncpy(currentlyPlaying.firstArtistUri, firstArtist["uri"].as<char *>(), 40);
 
-            currentlyPlaying.albumName = (char *)item["album"]["name"].as<char *>();
-            currentlyPlaying.albumUri = (char *)item["album"]["uri"].as<char *>();
+            strncpy(currentlyPlaying.albumName, item["album"]["name"].as<char *>(), 50);
+            strncpy(currentlyPlaying.albumUri, item["album"]["uri"].as<char *>(), 40);
 
             JsonArray images = item["album"]["images"];
 
@@ -561,11 +561,11 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
                 int adjustedIndex = startingIndex + i;
                 currentlyPlaying.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
                 currentlyPlaying.albumImages[i].width = images[adjustedIndex]["width"].as<int>();
-                currentlyPlaying.albumImages[i].url = (char *)images[adjustedIndex]["url"].as<char *>();
+                strncpy(currentlyPlaying.albumImages[i].url, images[adjustedIndex]["url"].as<char *>(), 100);
             }
 
-            currentlyPlaying.trackName = (char *)item["name"].as<char *>();
-            currentlyPlaying.trackUri = (char *)item["uri"].as<char *>();
+            strncpy(currentlyPlaying.trackName, item["name"].as<char *>(), 50);
+            strncpy(currentlyPlaying.trackUri, item["uri"].as<char *>(), 40);
 
             currentlyPlaying.isPlaying = doc["is_playing"].as<bool>();
 
@@ -803,8 +803,7 @@ void ArduinoSpotify::skipHeaders(bool tossUnexpectedForJSON)
         // This should toss them away
         while (client->available() && client->peek() != '{')
         {
-            char c = 0;
-            client->readBytes(&c, 1);
+            char c = client->read();
 #ifdef SPOTIFY_DEBUG
             Serial.print(F("Tossing an unexpected character: "));
             Serial.println(c);
