@@ -442,7 +442,8 @@ uint8_t ArduinoSpotify::getDevices(SpotifyDevice resultDevices[], uint8_t maxDev
 
             if(results > maxDevices)
             {
-                Serial.printf("Too many devices: %d > %d\n", results, maxDevices);
+                Serial.printf("Too many devices: %d > %d (ignoring some)\n", results, maxDevices);
+                results = maxDevices;
             }
 
             for(uint8_t i = 0; i < results; i++)
