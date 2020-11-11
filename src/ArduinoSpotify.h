@@ -47,6 +47,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_VOLUME_ENDPOINT "/v1/me/player/volume?volume_percent=%d"
 #define SPOTIFY_SHUFFLE_ENDPOINT "/v1/me/player/shuffle?state=%s"
 #define SPOTIFY_REPEAT_ENDPOINT "/v1/me/player/repeat?state=%s"
+#define SPOTIFY_DEVICES_ENDPOINT "/v1/me/player/devices"
 
 #define SPOTIFY_NEXT_TRACK_ENDPOINT "/v1/me/player/next"
 #define SPOTIFY_PREVIOUS_TRACK_ENDPOINT "/v1/me/player/previous"
@@ -143,12 +144,14 @@ public:
   bool playerControl(char *command, const char *deviceId = "", const char *body = "");
   bool playerNavigate(char *command, const char *deviceId = "");
   bool seek(int position, const char *deviceId = "");
+  uint8_t getDevices(SpotifyDevice devices[], uint8_t maxDevices);
 
   // Image methods
   bool getImage(char *imageUrl, Stream *file);
 
   int portNumber = 443;
   int tagArraySize = 10;
+  int deviceBufferSize = 10000;
   int currentlyPlayingBufferSize = 10000;
   int playerDetailsBufferSize = 10000;
   bool autoTokenRefresh = true;

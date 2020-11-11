@@ -405,6 +405,70 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
     //Will return 204 if all went well.
     return statusCode == 204;
 }
+uint8_t ArduinoSpotify::getDevices(SpotifyDevice resultDevices[], uint8_t maxDevices)
+{
+#ifdef SPOTIFY_DEBUG
+    Serial.println(SPOTIFY_DEVICES_ENDPOINT);
+#endif
+
+    if (autoTokenRefresh)
+    {
+        checkAndRefreshAccessToken();
+    }
+
+    int statusCode = makeGetRequest(SPOTIFY_DEVICES_ENDPOINT, _bearerToken);
+    if (statusCode > 0)
+    {
+        skipHeaders();
+    }
+
+    uint8_t results = 0;
+
+    if (statusCode == 200)
+    {
+        // Get from https://arduinojson.org/v6/assistant/
+        const size_t bufferSize = deviceBufferSize;
+
+        // Allocate DynamicJsonDocument
+        DynamicJsonDocument doc(bufferSize);
+
+        // Parse JSON object
+        DeserializationError error = deserializeJson(doc, *client);
+        if (!error)
+        {
+            JsonArray devices = doc["devices"].as<JsonArray>();
+
+            results = devices.size();
+
+            if(results > maxDevices)
+            {
+                Serial.printf("Too many devices: %d > %d\n", results, maxDevices);
+            }
+
+            for(uint8_t i = 0; i < results; i++)
+            {
+                resultDevices[i].id = (char *)devices[i]["id"].as<char *>();
+                resultDevices[i].isActive = devices[i]["is_active"].as<bool>();
+                resultDevices[i].isPrivateSession = devices[i]["is_private_session"].as<bool>();
+                resultDevices[i].isRestricted = devices[i]["is_restricted"].as<bool>();
+                resultDevices[i].name = (char *)devices[i]["name"].as<char *>();
+                resultDevices[i].type = (char *)devices[i]["type"].as<char *>();
+                resultDevices[i].volumePrecent = devices[i]["volume_percent"].as<uint8_t>();
+            }
+        }
+        else
+        {
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(error.c_str());
+        }
+    } else
+    {
+        Serial.printf("Invalid HTTP response: %d\n", statusCode);
+    }
+    closeClient();
+    return results;
+}
+
 
 CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 {
