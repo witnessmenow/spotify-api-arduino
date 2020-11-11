@@ -47,6 +47,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_VOLUME_ENDPOINT "/v1/me/player/volume?volume_percent=%d"
 #define SPOTIFY_SHUFFLE_ENDPOINT "/v1/me/player/shuffle?state=%s"
 #define SPOTIFY_REPEAT_ENDPOINT "/v1/me/player/repeat?state=%s"
+#define SPOTIFY_TRANSFER_ENDPOINT "/v1/me/player"
 #define SPOTIFY_DEVICES_ENDPOINT "/v1/me/player/devices"
 
 #define SPOTIFY_NEXT_TRACK_ENDPOINT "/v1/me/player/next"
@@ -74,13 +75,13 @@ struct SpotifyImage
 
 struct SpotifyDevice
 {
-  char *id;
-  char *name;
-  char *type;
+  char id[41] = {0};
+  char name[41]= {0};
+  char type[41] = {0};
   bool isActive;
   bool isRestricted;
   bool isPrivateSession;
-  int volumePrecent;
+  uint8_t volumePrecent;
 };
 
 struct PlayerDetails
@@ -145,6 +146,7 @@ public:
   bool playerNavigate(char *command, const char *deviceId = "");
   bool seek(int position, const char *deviceId = "");
   uint8_t getDevices(SpotifyDevice devices[], uint8_t maxDevices);
+  bool transferPlayback(const char *deviceId, bool play = false);
 
   // Image methods
   bool getImage(char *imageUrl, Stream *file);

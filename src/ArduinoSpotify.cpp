@@ -316,15 +316,16 @@ bool ArduinoSpotify::playerControl(char *command, const char *deviceId, const ch
     {
         char *questionMarkPointer;
         questionMarkPointer = strchr(command, '?');
-        char deviceIdBuff[50];
+        // DeviceId is char[41] so let's add 20 to be safe with the rest
+        char deviceIdBuff[60];
         if (questionMarkPointer == NULL)
         {
-            sprintf(deviceIdBuff, "?deviceId=%s", deviceId);
+            sprintf(deviceIdBuff, "?device_id=%s", deviceId);
         }
         else
         {
             // params already started
-            sprintf(deviceIdBuff, "&deviceId=%s", deviceId);
+            sprintf(deviceIdBuff, "&device_id=%s", deviceId);
         }
         strcat(command, deviceIdBuff);
     }
@@ -349,8 +350,9 @@ bool ArduinoSpotify::playerNavigate(char *command, const char *deviceId)
 {
     if (deviceId[0] != 0)
     {
-        char deviceIdBuff[50];
-        sprintf(deviceIdBuff, "?deviceId=%s", deviceId);
+        // DeviceId is char[41]
+        char deviceIdBuff[60];
+        sprintf(deviceIdBuff, "?device_id=%s", deviceId);
         strcat(command, deviceIdBuff);
     }
 
@@ -388,7 +390,7 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
     strcat(command, tempBuff);
     if (deviceId[0] != 0)
     {
-        sprintf(tempBuff, "?deviceId=%s", deviceId);
+        sprintf(tempBuff, "?device_id=%s", deviceId);
         strcat(command, tempBuff);
     }
 
@@ -448,12 +450,12 @@ uint8_t ArduinoSpotify::getDevices(SpotifyDevice resultDevices[], uint8_t maxDev
 
             for(uint8_t i = 0; i < results; i++)
             {
-                resultDevices[i].id = (char *)devices[i]["id"].as<char *>();
+                strncpy(resultDevices[i].id, devices[i]["id"].as<char *>(), 40);
                 resultDevices[i].isActive = devices[i]["is_active"].as<bool>();
                 resultDevices[i].isPrivateSession = devices[i]["is_private_session"].as<bool>();
                 resultDevices[i].isRestricted = devices[i]["is_restricted"].as<bool>();
-                resultDevices[i].name = (char *)devices[i]["name"].as<char *>();
-                resultDevices[i].type = (char *)devices[i]["type"].as<char *>();
+                strncpy(resultDevices[i].name, devices[i]["name"].as<char *>(), 40);
+                strncpy(resultDevices[i].type, devices[i]["type"].as<char *>(), 40);
                 resultDevices[i].volumePrecent = devices[i]["volume_percent"].as<uint8_t>();
             }
         }
@@ -468,6 +470,26 @@ uint8_t ArduinoSpotify::getDevices(SpotifyDevice resultDevices[], uint8_t maxDev
     }
     closeClient();
     return results;
+}
+bool ArduinoSpotify::transferPlayback(const char *deviceId, bool play)
+{
+#ifdef SPOTIFY_DEBUG
+    Serial.println(SPOTIFY_TRANSFER_ENDPOINT);
+#endif
+
+    if (autoTokenRefresh)
+    {
+        checkAndRefreshAccessToken();
+    }
+
+    char body[100];
+    sprintf(body, "{\"device_ids\":[\"%s\"],\"play\":\"%s\"}", deviceId, (play?"true":"false"));
+    Serial.println(body);
+
+    int statusCode = makePutRequest(SPOTIFY_TRANSFER_ENDPOINT, _bearerToken, body);
+    closeClient();
+    //Will return 204 if all went well.
+    return statusCode == 204;
 }
 
 
@@ -603,9 +625,9 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
         {
             JsonObject device = doc["device"];
             
-            playerDetails.device.id = (char *)device["id"].as<char *>();
-            playerDetails.device.name = (char *)device["name"].as<char *>();
-            playerDetails.device.type = (char *)device["type"].as<char *>();
+            strncpy(playerDetails.device.id, device["id"].as<char *>(), 40);
+            strncpy(playerDetails.device.name, device["name"].as<char *>(), 40);
+            strncpy(playerDetails.device.type, device["type"].as<char *>(), 40);
             playerDetails.device.isActive = device["is_active"].as<bool>();
             playerDetails.device.isPrivateSession = device["is_private_session"].as<bool>();
             playerDetails.device.isRestricted = device["is_restricted"].as<bool>();
