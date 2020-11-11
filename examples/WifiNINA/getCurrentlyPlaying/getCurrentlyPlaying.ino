@@ -29,7 +29,7 @@
 // ----------------------------
 
 #include <WiFiNINA.h>
-// Library for using network deatures of the official Arudino
+// Library for using network features of the official Arudino
 // Wifi Boards (MKR WiFi 1010, Nano 33 IOT etc)
 
 // Search for "nina" in the Arduino Library Manager
@@ -52,7 +52,7 @@
 char ssid[] = "SSID";         // your network SSID (name)
 char password[] = "password"; // your network password
 
-char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify APP
+char clientId[] = "56t4373258u3405u43u543";     // Your client ID of your spotify APP
 char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your spotify APP (Do Not share this!)
 
 // Country code, including this is advisable
@@ -60,9 +60,7 @@ char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your sp
 
 #define SPOTIFY_REFRESH_TOKEN "AAAAAAAAAABBBBBBBBBBBCCCCCCCCCCCDDDDDDDDDDD"
 
-
 //------- ---------------------- ------
-
 
 int status = WL_IDLE_STATUS;
 
@@ -72,27 +70,33 @@ ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
 unsigned long delayBetweenRequests = 60000; // Time between requests (1 minute)
 unsigned long requestDueTime;               //time when request due
 
-void setup() {
+void setup()
+{
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  while (!Serial) {
+  while (!Serial)
+  {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
   // check for the WiFi module:
-  if (WiFi.status() == WL_NO_MODULE) {
+  if (WiFi.status() == WL_NO_MODULE)
+  {
     Serial.println("Communication with WiFi module failed!");
     // don't continue
-    while (true);
+    while (true)
+      ;
   }
 
   String fv = WiFi.firmwareVersion();
-  if (fv < "1.0.0") {
+  if (fv < "1.0.0")
+  {
     Serial.println("Please upgrade the firmware");
   }
 
   // attempt to connect to WiFi network:
-  while (status != WL_CONNECTED) {
+  while (status != WL_CONNECTED)
+  {
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
@@ -108,7 +112,8 @@ void setup() {
   // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
 
   Serial.println("Refreshing Access Tokens");
-  if (!spotify.refreshAccessToken()) {
+  if (!spotify.refreshAccessToken())
+  {
     Serial.println("Failed to get access tokens");
   }
 }
@@ -119,53 +124,55 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
   {
     Serial.println("--------- Currently Playing ---------");
 
-
     Serial.print("Is Playing: ");
     if (currentlyPlaying.isPlaying)
     {
       Serial.println("Yes");
-    } else {
+    }
+    else
+    {
       Serial.println("No");
     }
 
     Serial.print("Track: ");
-        Serial.println(currentlyPlaying.trackName);
-        Serial.print("Track URI: ");
-        Serial.println(currentlyPlaying.trackUri);
-        Serial.println();
+    Serial.println(currentlyPlaying.trackName);
+    Serial.print("Track URI: ");
+    Serial.println(currentlyPlaying.trackUri);
+    Serial.println();
 
-        Serial.print("Artist: ");
-        Serial.println(currentlyPlaying.firstArtistName);
-        Serial.print("Artist URI: ");
-        Serial.println(currentlyPlaying.firstArtistUri);
-        Serial.println();
+    Serial.print("Artist: ");
+    Serial.println(currentlyPlaying.firstArtistName);
+    Serial.print("Artist URI: ");
+    Serial.println(currentlyPlaying.firstArtistUri);
+    Serial.println();
 
-        Serial.print("Album: ");
-        Serial.println(currentlyPlaying.albumName);
-        Serial.print("Album URI: ");
-        Serial.println(currentlyPlaying.albumUri);
-        Serial.println();
+    Serial.print("Album: ");
+    Serial.println(currentlyPlaying.albumName);
+    Serial.print("Album URI: ");
+    Serial.println(currentlyPlaying.albumUri);
+    Serial.println();
 
-        
-        // will be in order of widest to narrowest
-        // currentlyPlaying.numImages is the number of images that
-        // are stored 
-        for (int i = 0; i < currentlyPlaying.numImages; i++) {
-            Serial.println("------------------------");
-            Serial.print("Album Image: ");
-            Serial.println(currentlyPlaying.albumImages[i].url);
-            Serial.print("Dimensions: ");
-            Serial.print(currentlyPlaying.albumImages[i].width);
-            Serial.print(" x ");
-            Serial.print(currentlyPlaying.albumImages[i].height);
-            Serial.println();
-        }
+    // will be in order of widest to narrowest
+    // currentlyPlaying.numImages is the number of images that
+    // are stored
+    for (int i = 0; i < currentlyPlaying.numImages; i++)
+    {
+      Serial.println("------------------------");
+      Serial.print("Album Image: ");
+      Serial.println(currentlyPlaying.albumImages[i].url);
+      Serial.print("Dimensions: ");
+      Serial.print(currentlyPlaying.albumImages[i].width);
+      Serial.print(" x ");
+      Serial.print(currentlyPlaying.albumImages[i].height);
+      Serial.println();
+    }
 
     Serial.println("------------------------");
   }
 }
 
-void loop() {
+void loop()
+{
   if (millis() > requestDueTime)
   {
 
@@ -177,10 +184,10 @@ void loop() {
 
     requestDueTime = millis() + delayBetweenRequests;
   }
-
 }
 
-void printWiFiStatus() {
+void printWiFiStatus()
+{
   // print the SSID of the network you're attached to:
   Serial.print("SSID: ");
   Serial.println(WiFi.SSID());

@@ -21,7 +21,6 @@
     Twitter: https://twitter.com/witnessmenow
  *******************************************************************/
 
-
 // ----------------------------
 // Standard Libraries
 // ----------------------------
@@ -50,14 +49,13 @@
 char ssid[] = "SSID";         // your network SSID (name)
 char password[] = "password"; // your network password
 
-char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify APP
+char clientId[] = "56t4373258u3405u43u543";     // Your client ID of your spotify APP
 char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your spotify APP (Do Not share this!)
 
 // Country code, including this is advisable
 #define SPOTIFY_MARKET "IE"
 
 #define SPOTIFY_REFRESH_TOKEN "AAAAAAAAAABBBBBBBBBBBCCCCCCCCCCCDDDDDDDDDDD"
-
 
 //------- ---------------------- ------
 
@@ -71,19 +69,20 @@ ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
 unsigned long delayBetweenRequests = 60000; // Time between requests (1 minute)
 unsigned long requestDueTime;               //time when request due
 
+void setup()
+{
 
-void setup() {
-
-  Serial.begin(115200);
+    Serial.begin(115200);
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
     Serial.println("");
 
     // Wait for connection
-    while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
     }
     Serial.println("");
     Serial.print("Connected to ");
@@ -97,7 +96,8 @@ void setup() {
     // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
 
     Serial.println("Refreshing Access Tokens");
-    if(!spotify.refreshAccessToken()){
+    if (!spotify.refreshAccessToken())
+    {
         Serial.println("Failed to get access tokens");
     }
 }
@@ -108,12 +108,13 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
     {
         Serial.println("--------- Currently Playing ---------");
 
-    
         Serial.print("Is Playing: ");
         if (currentlyPlaying.isPlaying)
         {
             Serial.println("Yes");
-        } else {
+        }
+        else
+        {
             Serial.println("No");
         }
 
@@ -143,23 +144,28 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
         Serial.println(duration);
         Serial.println();
 
-        float precentage = ((float) progress / (float) duration) * 100;
+        float precentage = ((float)progress / (float)duration) * 100;
         int clampedPrecentage = (int)precentage;
         Serial.print("<");
-        for (int j = 0; j < 50; j++){
-        if(clampedPrecentage >= (j*2)){
-            Serial.print("=");
-        } else {
-            Serial.print("-");
-        }
+        for (int j = 0; j < 50; j++)
+        {
+            if (clampedPrecentage >= (j * 2))
+            {
+                Serial.print("=");
+            }
+            else
+            {
+                Serial.print("-");
+            }
         }
         Serial.println(">");
         Serial.println();
 
         // will be in order of widest to narrowest
         // currentlyPlaying.numImages is the number of images that
-        // are stored 
-        for (int i = 0; i < currentlyPlaying.numImages; i++) {
+        // are stored
+        for (int i = 0; i < currentlyPlaying.numImages; i++)
+        {
             Serial.println("------------------------");
             Serial.print("Album Image: ");
             Serial.println(currentlyPlaying.albumImages[i].url);
@@ -173,8 +179,9 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
     }
 }
 
-void loop() {
-  if (millis() > requestDueTime)
+void loop()
+{
+    if (millis() > requestDueTime)
     {
         Serial.print("Free Heap: ");
         Serial.println(ESP.getFreeHeap());
@@ -187,5 +194,4 @@ void loop() {
 
         requestDueTime = millis() + delayBetweenRequests;
     }
-
 }
