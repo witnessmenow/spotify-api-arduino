@@ -109,13 +109,16 @@ void printPlayerDetailsToSerial(PlayerDetails playerDetails)
         Serial.println("--------- Player Details ---------");
 
         Serial.print("Device ID: ");
-        Serial.println(playerDetails.deviceId);
+        Serial.println(playerDetails.device.id);
 
         Serial.print("Device Name: ");
-        Serial.println(playerDetails.deviceName);
+        Serial.println(playerDetails.device.name);
+
+        Serial.print("Device Type: ");
+        Serial.println(playerDetails.device.type);
 
         Serial.print("Is Active: ");
-        if (playerDetails.isActive)
+        if (playerDetails.device.isActive)
         {
             Serial.println("Yes");
         } else {
@@ -123,15 +126,23 @@ void printPlayerDetailsToSerial(PlayerDetails playerDetails)
         }
 
         Serial.print("Is Resticted: ");
-        if (playerDetails.isRestricted)
+        if (playerDetails.device.isRestricted)
         {
             Serial.println("Yes, from API docs \"no Web API commands will be accepted by this device\"");
         } else {
             Serial.println("No");
         }
 
+        Serial.print("Is Private Session: ");
+        if (playerDetails.device.isPrivateSession)
+        {
+            Serial.println("Yes");
+        } else {
+            Serial.println("No");
+        }
+
         Serial.print("Volume Precent: ");
-        Serial.println(playerDetails.volumePrecent);
+        Serial.println(playerDetails.device.volumePrecent);
 
         Serial.print("Progress (Ms): ");
         Serial.println(playerDetails.progressMs);

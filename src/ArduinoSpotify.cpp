@@ -535,11 +535,14 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
         if (!error)
         {
             JsonObject device = doc["device"];
-            playerDetails.deviceId = (char *)device["id"].as<char *>();
-            playerDetails.deviceName = (char *)device["name"].as<char *>();
-            playerDetails.isActive = device["is_active"].as<bool>();
-            playerDetails.isRestricted = device["is_restricted"].as<bool>();
-            playerDetails.volumePrecent = device["volume_percent"].as<int>();
+            
+            playerDetails.device.id = (char *)device["id"].as<char *>();
+            playerDetails.device.name = (char *)device["name"].as<char *>();
+            playerDetails.device.type = (char *)device["type"].as<char *>();
+            playerDetails.device.isActive = device["is_active"].as<bool>();
+            playerDetails.device.isPrivateSession = device["is_private_session"].as<bool>();
+            playerDetails.device.isRestricted = device["is_restricted"].as<bool>();
+            playerDetails.device.volumePrecent = device["volume_percent"].as<int>();
 
             playerDetails.progressMs = doc["progress_ms"].as<long>();
             playerDetails.isPlaying = doc["is_playing"].as<bool>();

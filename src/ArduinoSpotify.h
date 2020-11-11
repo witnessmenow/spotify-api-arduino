@@ -69,13 +69,21 @@ struct SpotifyImage
   char *url;
 };
 
-struct PlayerDetails
+struct SpotifyDevice
 {
-  char *deviceId;
-  char *deviceName;
+  char *id;
+  char *name;
+  char *type;
   bool isActive;
   bool isRestricted;
+  bool isPrivateSession;
   int volumePrecent;
+};
+
+struct PlayerDetails
+{
+  SpotifyDevice device;
+
   long progressMs;
   bool isPlaying;
   RepeatOptions repeateState;
