@@ -1,4 +1,7 @@
 # arduino-spotify-api
+![Travis CI status](https://api.travis-ci.org/witnessmenow/arduino-spotify-api.svg?branch=master)
+![License](https://img.shields.io/github/license/witnessmenow/arduino-spotify-api)
+![Release stable](https://badgen.net/github/release/witnessmenow/arduino-spotify-api/stable)  
 Arduino library for integrating with a subset of the [Spotify Web-API](https://developer.spotify.com/documentation/web-api/reference/) (Does not play music)
 
 **Work in progress library - expect changes!**

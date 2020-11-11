@@ -1,0 +1,50 @@
+language: python
+python:
+    - "3.7"
+
+# Cache PlatformIO packages using Travis CI container-based infrastructure
+cache:
+    directories:
+        - "~/.platformio"
+
+env:
+    # ESP8266
+    - SCRIPT=platformioSingle EXAMPLE_NAME=getCurrentlyPlaying EXAMPLE_FOLDER=/ BOARDTYPE=esp8266 BOARD=d1_mini
+    - SCRIPT=platformioSingle EXAMPLE_NAME=getRefreshToken EXAMPLE_FOLDER=/ BOARDTYPE=esp8266 BOARD=d1_mini
+    - SCRIPT=platformioSingle EXAMPLE_NAME=playerControls EXAMPLE_FOLDER=/ BOARDTYPE=esp8266 BOARD=d1_mini
+
+    # ESP32
+    # - SCRIPT=platformioSingle EXAMPLE_NAME=albumArtMatrix EXAMPLE_FOLDER=/displayAlbumArt/ BOARDTYPE=ESP32 BOARD=esp32dev
+    - SCRIPT=platformioSingle EXAMPLE_NAME=getCurrentlyPlaying EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
+    - SCRIPT=platformioSingle EXAMPLE_NAME=getRefreshToken EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
+    - SCRIPT=platformioSingle EXAMPLE_NAME=playAdvanced EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
+    - SCRIPT=platformioSingle EXAMPLE_NAME=playerControls EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
+    - SCRIPT=platformioSingle EXAMPLE_NAME=playerDetails EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
+
+    # WifiNINA
+    #- SCRIPT=platformioSingle EXAMPLE_NAME=getCurrentlyPlaying EXAMPLE_FOLDER=/ BOARDTYPE=WifiNINA BOARD=nano_33_iot
+    #- SCRIPT=platformioSingle EXAMPLE_NAME=playerControls EXAMPLE_FOLDER=/ BOARDTYPE=WifiNINA BOARD=nano_33_iot
+
+before_install: 
+
+install:
+    - pip install -U platformio
+    - platformio update
+    #
+    # Libraries from PlatformIO Library Registry:
+    #
+    # https://platformio.org/lib/show/64/ArduinoJson
+    # https://platformio.org/lib/show/3577/ESP32%2064x32%20LED%20MATRIX%20HUB75%20DMA%20Display
+    # https://platformio.org/lib/show/13/Adafruit%20GFX%20Library
+    # https://platformio.org/lib/show/6906/TJpg_Decoder
+    # https://platformio.org/lib/show/6214/Adafruit%20BusIO
+    - platformio lib -g install 64 3577 13 6906 6214
+
+before_script:
+    # 
+
+script:
+    - scripts/travis/$SCRIPT.sh
+
+before_cache:
+    # - rm -rf ~/.platformio
