@@ -574,10 +574,10 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
             JsonObject firstArtist = item["album"]["artists"][0];
 
             strncpy(currentlyPlaying.firstArtistName, firstArtist["name"].as<char *>(), 50);
-            strncpy(currentlyPlaying.firstArtistUri, firstArtist["uri"].as<char *>(), 40);
+            strncpy(currentlyPlaying.firstArtistUri, firstArtist["uri"].as<char *>(), 60);
 
             strncpy(currentlyPlaying.albumName, item["album"]["name"].as<char *>(), 50);
-            strncpy(currentlyPlaying.albumUri, item["album"]["uri"].as<char *>(), 40);
+            strncpy(currentlyPlaying.albumUri, item["album"]["uri"].as<char *>(), 60);
 
             JsonArray images = item["album"]["images"];
 
@@ -603,7 +603,7 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
             }
 
             strncpy(currentlyPlaying.trackName, item["name"].as<char *>(), 50);
-            strncpy(currentlyPlaying.trackUri, item["uri"].as<char *>(), 40);
+            strncpy(currentlyPlaying.trackUri, item["uri"].as<char *>(), 60);
 
             currentlyPlaying.isPlaying = doc["is_playing"].as<bool>();
 

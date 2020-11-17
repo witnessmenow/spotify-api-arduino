@@ -99,11 +99,11 @@ struct PlayerDetails
 struct CurrentlyPlaying
 {
   char firstArtistName[51] = {0};
-  char firstArtistUri[41] = {0};
+  char firstArtistUri[61] = {0};
   char albumName[51] = {0};
-  char albumUri[41] = {0};
+  char albumUri[61] = {0};
   char trackName[51] = {0};
-  char trackUri[41] = {0};
+  char trackUri[61] = {0};
   SpotifyImage albumImages[3];
   int numImages;
   bool isPlaying;
