@@ -90,9 +90,11 @@ int ArduinoSpotify::makeRequestWithBody(const char *type, const char *command, c
     client->print(F("Content-Length: "));
     client->println(strlen(body));
 
-    client->println();
-
-    client->print(body);
+    if(strlen(body) > 0)
+    {
+        client->println();
+        client->print(body);
+    }
 
     if (client->println() == 0)
     {
