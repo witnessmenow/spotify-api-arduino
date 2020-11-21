@@ -160,10 +160,6 @@ int ArduinoSpotify::makeGetRequest(const char *command, const char *authorizatio
     {
         client->print(F("Connection: keep-alive"));
     }
-    else
-    {
-    //    client->println(F("close"));
-    }
 
     if (client->println() == 0)
     {
@@ -880,7 +876,7 @@ void ArduinoSpotify::parseError()
 
 void ArduinoSpotify::stopClient(bool force)
 {
-    /*if (client->connected())
+    if (client->connected())
     {
 #ifdef SPOTIFY_DEBUG
         if(client->available() > 0)
@@ -892,7 +888,7 @@ void ArduinoSpotify::stopClient(bool force)
         {
             client->read();
         }
-    }*/
+    }
 
     if(!useHttpKeepAlive || force)
     {
@@ -900,6 +896,5 @@ void ArduinoSpotify::stopClient(bool force)
         Serial.println(F("Closing client"));
 #endif
         client->stop();
-        delay(500);
     }
 }
