@@ -140,7 +140,7 @@ void playPlaylist(){
 
     char body[100];
     sprintf(body, "{\"context_uri\" : \"%s\"}", samplePlaylist);
-    if (spotify.playPlaylist(body)) {
+    if (spotify.playAdvanced(body)) {
         Serial.println("sent!");
     }
 }
@@ -153,7 +153,7 @@ void specifyTrackNumOfPlaylist(){
 
     char body[200];
     sprintf(body, "{\"context_uri\" : \"%s\", \"offset\": {\"position\": %d}}", samplePlaylist, playlistTrackNum);
-    if (spotify.specifyTrackNumOfPlaylist(body)) {
+    if (spotify.playAdvanced(body)) {
         Serial.println("sent!");
     }
 }
@@ -164,7 +164,7 @@ void specifyTrackOfPlaylist(){
 
     char body[200];
     sprintf(body, "{\"context_uri\" : \"%s\", \"offset\": {\"uri\": \"%s\"}}", samplePlaylist, trackOnPlaylist);
-    if (spotify.specifyTrackOfPlaylist(body)) {
+    if (spotify.playAdvanced(body)) {
         Serial.println("sent!");
     }
 }
@@ -229,8 +229,8 @@ void setup() {
     delay(10000);
     Serial.println("Playing track number on Playlist");
     specifyTrackNumOfPlaylist();
-    delay(10000)
-    Serial.println("Playing specific track on Playlist")
+    delay(10000);
+    Serial.println("Playing specific track on Playlist");
     specifyTrackOfPlaylist();
 
 }
