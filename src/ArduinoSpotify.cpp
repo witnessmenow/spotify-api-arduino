@@ -77,14 +77,9 @@ int ArduinoSpotify::makeRequestWithBody(const char *type, const char *command, c
     }
 
     client->println(F("Cache-Control: no-cache"));
-    client->print(F("Connection: "));
     if(useHttpKeepAlive)
     {
-        client->println(F("keep-alive"));
-    }
-    else
-    {
-        client->println(F("close"));
+        client->print(F("Connection: keep-alive"));
     }
 
     client->print(F("Content-Length: "));
@@ -161,14 +156,13 @@ int ArduinoSpotify::makeGetRequest(const char *command, const char *authorizatio
     }
 
     client->println(F("Cache-Control: no-cache"));
-    client->print(F("Connection: "));
     if(useHttpKeepAlive)
     {
-        client->println(F("keep-alive"));
+        client->print(F("Connection: keep-alive"));
     }
     else
     {
-        client->println(F("close"));
+    //    client->println(F("close"));
     }
 
     if (client->println() == 0)
@@ -886,7 +880,7 @@ void ArduinoSpotify::parseError()
 
 void ArduinoSpotify::stopClient(bool force)
 {
-    if (client->connected())
+    /*if (client->connected())
     {
 #ifdef SPOTIFY_DEBUG
         if(client->available() > 0)
@@ -898,12 +892,14 @@ void ArduinoSpotify::stopClient(bool force)
         {
             client->read();
         }
-    }
+    }*/
+
     if(!useHttpKeepAlive || force)
     {
 #ifdef SPOTIFY_DEBUG
         Serial.println(F("Closing client"));
 #endif
         client->stop();
+        delay(500);
     }
 }
