@@ -38,17 +38,7 @@ int ArduinoSpotify::makeRequestWithBody(const char *type, const char *command, c
 {
     client->flush();
     client->setTimeout(SPOTIFY_TIMEOUT);
-    if(client->connected())
-    {
-#ifdef SPOTIFY_DEBUG
-        Serial.println("Reusing existing connection");
-#endif
-        while(client->available() > 0)
-        {
-            client->read();
-        }
-    }
-    else if (!client->connect(host, portNumber))
+    if (!client->connect(host, portNumber))
     {
         Serial.println(F("Connection failed"));
         return -1;
@@ -77,14 +67,7 @@ int ArduinoSpotify::makeRequestWithBody(const char *type, const char *command, c
     }
 
     client->println(F("Cache-Control: no-cache"));
-    if(useHttpKeepAlive)
-    {
-        client->println(F("Connection: keep-alive"));
-    }
-    else
-    {
-        client->println(F("Connection: close"));
-    }
+    client->println(F("Connection: close"));
 
     client->print(F("Content-Length: "));
     client->println(strlen(body));
@@ -113,17 +96,7 @@ int ArduinoSpotify::makeGetRequest(const char *command, const char *authorizatio
 {
     client->flush();
     client->setTimeout(SPOTIFY_TIMEOUT);
-    if(client->connected())
-    {
-#ifdef SPOTIFY_DEBUG
-        Serial.println("Reusing existing connection");
-#endif
-        while(client->available() > 0)
-        {
-            client->read();
-        }
-    }
-    else if (!client->connect(host, portNumber))
+    if (!client->connect(host, portNumber))
     {
         Serial.println(F("Connection failed"));
         return -1;
@@ -154,14 +127,7 @@ int ArduinoSpotify::makeGetRequest(const char *command, const char *authorizatio
     }
 
     client->println(F("Cache-Control: no-cache"));
-    if(useHttpKeepAlive)
-    {
-        client->println(F("Connection: keep-alive"));
-    }
-    else
-    {
-        client->println(F("Connection: close"));
-    }
+    client->println(F("Connection: close"));
     client->println(F("Content-Length: 0"));
 
 
@@ -377,13 +343,8 @@ bool ArduinoSpotify::playerControl(char *command, const char *deviceId, const ch
 
     stopClient();
 
-#ifdef SPOTIFY_DEBUG
-    Serial.print("Status: ");
-    Serial.println(statusCode);
-#endif
-
     //Will return 204 if all went well.
-    return statusCode == 204;
+    return (statusCode == 204);
 }
 
 bool ArduinoSpotify::playerNavigate(char *command, const char *deviceId)
@@ -422,6 +383,7 @@ bool ArduinoSpotify::previousTrack(const char *deviceId)
     char command[100] = SPOTIFY_PREVIOUS_TRACK_ENDPOINT;
     return playerNavigate(command, deviceId);
 }
+
 bool ArduinoSpotify::seek(int position, const char *deviceId)
 {
     char command[100] = SPOTIFY_SEEK_ENDPOINT;
@@ -447,6 +409,7 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
     //Will return 204 if all went well.
     return statusCode == 204;
 }
+
 uint8_t ArduinoSpotify::getDevices(SpotifyDevice resultDevices[], uint8_t maxDevices)
 {
 #ifdef SPOTIFY_DEBUG
@@ -531,7 +494,6 @@ bool ArduinoSpotify::transferPlayback(const char *deviceId, bool play)
     //Will return 204 if all went well.
     return statusCode == 204;
 }
-
 
 CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 {
@@ -884,7 +846,7 @@ void ArduinoSpotify::parseError()
     }
 }
 
-void ArduinoSpotify::stopClient(bool force)
+void ArduinoSpotify::stopClient()
 {
     if (client->connected())
     {
@@ -898,10 +860,7 @@ void ArduinoSpotify::stopClient(bool force)
         {
             client->read();
         }
-    }
 
-    if(!useHttpKeepAlive || force)
-    {
 #ifdef SPOTIFY_DEBUG
         Serial.println(F("Closing client"));
 #endif

@@ -151,16 +151,12 @@ public:
   // Image methods
   bool getImage(char *imageUrl, Stream *file);
 
-  // Should not be needed, but might be use to save some RAM between requests
-  void stopClient(bool force = false);
-
   int portNumber = 443;
   int tagArraySize = 10;
   int deviceBufferSize = 10000;
   int currentlyPlayingBufferSize = 10000;
   int playerDetailsBufferSize = 10000;
   bool autoTokenRefresh = true;
-  bool useHttpKeepAlive = true;
   Client *client;
 
 private:
@@ -170,6 +166,8 @@ private:
   const char *_clientSecret;
   unsigned int timeTokenRefreshed;
   unsigned int tokenTimeToLiveMs;
+  // Should not be needed, but might be use to save some RAM between requests
+  void stopClient();
   int getContentLength();
   int getHttpStatusCode();
   void skipHeaders(bool tossUnexpectedForJSON = true);
