@@ -79,23 +79,21 @@ int ArduinoSpotify::makeRequestWithBody(const char *type, const char *command, c
     client->println(F("Cache-Control: no-cache"));
     if(useHttpKeepAlive)
     {
-        client->print(F("Connection: keep-alive"));
+        client->println(F("Connection: keep-alive"));
+    }
+    else
+    {
+        client->println(F("Connection: close"));
     }
 
     client->print(F("Content-Length: "));
     client->println(strlen(body));
+    client->println();
 
-    if(strlen(body) > 0)
+    if(body[0] != '\0')
     {
-        client->println();
         client->print(body);
-    }
-
-    if (client->println() == 0)
-    {
-        Serial.println(F("Failed to send request"));
-        return -2;
-    }
+    } 
 
     int statusCode = getHttpStatusCode();
     return statusCode;
@@ -158,8 +156,14 @@ int ArduinoSpotify::makeGetRequest(const char *command, const char *authorizatio
     client->println(F("Cache-Control: no-cache"));
     if(useHttpKeepAlive)
     {
-        client->print(F("Connection: keep-alive"));
+        client->println(F("Connection: keep-alive"));
     }
+    else
+    {
+        client->println(F("Connection: close"));
+    }
+    client->println(F("Content-Length: 0"));
+
 
     if (client->println() == 0)
     {
@@ -372,6 +376,12 @@ bool ArduinoSpotify::playerControl(char *command, const char *deviceId, const ch
     int statusCode = makePutRequest(command, _bearerToken, body);
 
     stopClient();
+
+#ifdef SPOTIFY_DEBUG
+    Serial.print("Status: ");
+    Serial.println(statusCode);
+#endif
+
     //Will return 204 if all went well.
     return statusCode == 204;
 }
@@ -865,12 +875,12 @@ void ArduinoSpotify::parseError()
     DeserializationError error = deserializeJson(doc, *client);
     if (!error)
     {
-        Serial.print(F("getAuthToken error"));
+        Serial.println(F("getAuthToken error"));
         serializeJson(doc, Serial);
     }
     else
     {
-        Serial.print(F("Could not parse error"));
+        Serial.println(F("Could not parse error"));
     }
 }
 
