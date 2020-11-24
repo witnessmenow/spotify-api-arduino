@@ -104,7 +104,7 @@ struct CurrentlyPlaying
   char albumUri[61] = {0};
   char trackName[51] = {0};
   char trackUri[61] = {0};
-  SpotifyImage albumImages[3];
+  SpotifyImage albumImages[SPOTIFY_NUM_ALBUM_IMAGES];
   int numImages;
   bool isPlaying;
   long progressMs;

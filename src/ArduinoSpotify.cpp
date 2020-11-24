@@ -508,12 +508,6 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 #ifdef SPOTIFY_DEBUG
     Serial.println(command);
 #endif
-
-    // Get from https://arduinojson.org/v6/assistant/
-    const size_t bufferSize = currentlyPlayingBufferSize;
-    CurrentlyPlaying currentlyPlaying;
-    // This flag will get cleared if all goes well
-    currentlyPlaying.error = true;
     if (autoTokenRefresh)
     {
         checkAndRefreshAccessToken();
@@ -525,10 +519,14 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
         skipHeaders();
     }
 
+    CurrentlyPlaying currentlyPlaying;
+    // This flag will get cleared if all goes well
+    currentlyPlaying.error = true;
+
     if (statusCode == 200)
     {
         // Allocate DynamicJsonDocument
-        DynamicJsonDocument doc(bufferSize);
+        DynamicJsonDocument doc(currentlyPlayingBufferSize);
 
         // Parse JSON object
         DeserializationError error = deserializeJson(doc, *client);
@@ -558,7 +556,7 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
                 currentlyPlaying.numImages = numImages;
             }
 
-            for (int i = 0; i < numImages; i++)
+            for (int i = 0; i < currentlyPlaying.numImages; i++)
             {
                 int adjustedIndex = startingIndex + i;
                 currentlyPlaying.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
@@ -848,22 +846,8 @@ void ArduinoSpotify::parseError()
 
 void ArduinoSpotify::stopClient()
 {
-    if (client->connected())
-    {
-#ifdef SPOTIFY_DEBUG
-        if(client->available() > 0)
-        {
-            Serial.println(F("Consuming remaining buffer"));
-        }
-#endif
-        while(client->available() > 0)
-        {
-            client->read();
-        }
-
 #ifdef SPOTIFY_DEBUG
         Serial.println(F("Closing client"));
 #endif
         client->stop();
-    }
 }
