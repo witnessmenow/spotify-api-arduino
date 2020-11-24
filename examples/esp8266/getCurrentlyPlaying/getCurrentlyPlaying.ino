@@ -105,7 +105,7 @@ void setup() {
     }
 }
 
-void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
+void printCurrentlyPlayingToSerial(CurrentlyPlaying &currentlyPlaying)
 {
     if (!currentlyPlaying.error)
     {
