@@ -38,7 +38,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_FINGERPRINT "B9 79 6B CE FD 61 21 97 A7 02 90 EE DA CD F0 A0 44 13 0E EB"
 #define SPOTIFY_TIMEOUT 2000
 
-#define SPOTIFY_NAME_CHAR_LENGTH 100
+#define SPOTIFY_NAME_CHAR_LENGTH 100 //Increase if artists/song/album names are being cut off
 #define SPOTIFY_URI_CHAR_LENGTH 40
 #define SPOTIFY_URL_CHAR_LENGTH 70
 
