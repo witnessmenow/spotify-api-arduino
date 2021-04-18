@@ -33,7 +33,7 @@
 // Additional Libraries - each one of these will need to be installed.
 // ----------------------------
 
-#include <Arduinospotify.h>
+#include <ArduinoSpotify.h>
 // Library for connecting to the Spotify API
 
 // Install from Github
