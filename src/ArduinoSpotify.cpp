@@ -439,11 +439,30 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 
     if (statusCode == 200)
     {
+        //Apply Json Filter: https://arduinojson.org/v6/example/filter/
+        StaticJsonDocument<288> filter;
+        filter["is_playing"] = true;
+        filter["progress_ms"] = true;
+        JsonObject filter_item = filter.createNestedObject("item");
+        filter_item["duration_ms"] = true;
+        filter_item["name"] = true;
+        filter_item["uri"] = true;
+        JsonObject filter_item_album = filter_item.createNestedObject("album");
+        filter_item_album["name"] = true;
+        filter_item_album["uri"] = true;
+        JsonObject filter_item_album_artists_0 = filter_item_album["artists"].createNestedObject();
+        filter_item_album_artists_0["name"] = true;
+        filter_item_album_artists_0["uri"] = true;
+        JsonObject filter_item_album_images_0 = filter_item_album["images"].createNestedObject();
+        filter_item_album_images_0["height"] = true;
+        filter_item_album_images_0["width"] = true;
+        filter_item_album_images_0["url"] = true;
+
         // Allocate DynamicJsonDocument
         DynamicJsonDocument doc(bufferSize);
 
         // Parse JSON object
-        DeserializationError error = deserializeJson(doc, *client);
+        DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
         if (!error)
         {
             JsonObject item = doc["item"];
@@ -535,11 +554,26 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
 
     if (statusCode == 200)
     {
+
+        StaticJsonDocument<192> filter;
+        JsonObject filter_device = filter.createNestedObject("device");
+        filter_device["id"] = true;
+        filter_device["name"] = true;
+        filter_device["type"] = true;
+        filter_device["is_active"] = true;
+        filter_device["is_private_session"] = true;
+        filter_device["is_restricted"] = true;
+        filter_device["volume_percent"] = true;
+        filter["progress_ms"] = true;
+        filter["is_playing"] = true;
+        filter["shuffle_state"] = true;
+        filter["repeat_state"] = true;
+
         // Allocate DynamicJsonDocument
         DynamicJsonDocument doc(bufferSize);
 
         // Parse JSON object
-        DeserializationError error = deserializeJson(doc, *client);
+        DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
         if (!error)
         {
             JsonObject device = doc["device"];

@@ -151,8 +151,8 @@ public:
 
   int portNumber = 443;
   int tagArraySize = 10;
-  int currentlyPlayingBufferSize = 10000;
-  int playerDetailsBufferSize = 10000;
+  int currentlyPlayingBufferSize = 3000;
+  int playerDetailsBufferSize = 2000;
   bool autoTokenRefresh = true;
   Client *client;
 
