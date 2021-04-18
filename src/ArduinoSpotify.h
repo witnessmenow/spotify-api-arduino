@@ -38,9 +38,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_FINGERPRINT "B9 79 6B CE FD 61 21 97 A7 02 90 EE DA CD F0 A0 44 13 0E EB"
 #define SPOTIFY_TIMEOUT 2000
 
-#define SPOTIFY_NAME_CHAR_LENGTH 250
+#define SPOTIFY_NAME_CHAR_LENGTH 100
 #define SPOTIFY_URI_CHAR_LENGTH 40
-#define SPOTIFY_URL_CHAR_LENGTH 100
+#define SPOTIFY_URL_CHAR_LENGTH 70
 
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
 
@@ -59,7 +59,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
-#define SPOTIFY_NUM_ALBUM_IMAGES 3
+#define SPOTIFY_NUM_ALBUM_IMAGES 1
 
 enum RepeatOptions
 {
@@ -72,7 +72,7 @@ struct SpotifyImage
 {
   int height;
   int width;
-  char url[SPOTIFY_URL_CHAR_LENGTH];
+  //char url[SPOTIFY_URL_CHAR_LENGTH];
 };
 
 struct SpotifyDevice

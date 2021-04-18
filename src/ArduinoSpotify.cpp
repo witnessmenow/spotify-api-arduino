@@ -149,7 +149,7 @@ void ArduinoSpotify::setRefreshToken(const char *refreshToken)
 
 bool ArduinoSpotify::refreshAccessToken()
 {
-    char body[1000];
+    char body[300];
     sprintf(body, refreshAccessTokensBody, _refreshToken, _clientId, _clientSecret);
 
 #ifdef SPOTIFY_DEBUG
@@ -207,7 +207,7 @@ bool ArduinoSpotify::checkAndRefreshAccessToken()
 const char *ArduinoSpotify::requestAccessTokens(const char *code, const char *redirectUrl)
 {
 
-    char body[1000];
+    char body[400];
     sprintf(body, requestAccessTokensBody, code, redirectUrl, _clientId, _clientSecret);
 
 #ifdef SPOTIFY_DEBUG
@@ -408,10 +408,10 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
 
 CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 {
-    char command[100] = SPOTIFY_CURRENTLY_PLAYING_ENDPOINT;
+    char command[50] = SPOTIFY_CURRENTLY_PLAYING_ENDPOINT;
     if (market[0] != 0)
     {
-        char marketBuff[30];
+        char marketBuff[15];
         sprintf(marketBuff, "?market=%s", market);
         strcat(command, marketBuff);
     }
@@ -445,7 +445,8 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
     if (statusCode == 200)
     {
         //Apply Json Filter: https://arduinojson.org/v6/example/filter/
-        StaticJsonDocument<288> filter;
+        DynamicJsonDocument filter(288);
+        //StaticJsonDocument<288> filter;
         filter["is_playing"] = true;
         filter["progress_ms"] = true;
         JsonObject filter_item = filter.createNestedObject("item");
@@ -507,8 +508,8 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
                 int adjustedIndex = startingIndex + i;
                 currentlyPlaying.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
                 currentlyPlaying.albumImages[i].width = images[adjustedIndex]["width"].as<int>();
-                strncpy(currentlyPlaying.albumImages[i].url, images[adjustedIndex]["url"].as<char *>(), SPOTIFY_URL_CHAR_LENGTH);
-                currentlyPlaying.albumImages[i].url[SPOTIFY_URL_CHAR_LENGTH-1] = '\0';
+                // strncpy(currentlyPlaying.albumImages[i].url, images[adjustedIndex]["url"].as<char *>(), SPOTIFY_URL_CHAR_LENGTH);
+                // currentlyPlaying.albumImages[i].url[SPOTIFY_URL_CHAR_LENGTH-1] = '\0';
                 //currentlyPlaying.albumImages[i].url = (char *)images[adjustedIndex]["url"].as<char *>();
             }
 
@@ -578,7 +579,8 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
     if (statusCode == 200)
     {
 
-        StaticJsonDocument<192> filter;
+        //StaticJsonDocument<192> filter;
+        DynamicJsonDocument filter(192);
         JsonObject filter_device = filter.createNestedObject("device");
         filter_device["id"] = true;
         filter_device["name"] = true;
