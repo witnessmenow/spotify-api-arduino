@@ -47,7 +47,6 @@
 #include <FS.h>
 #include "SPIFFS.h"
 
-
 // ----------------------------
 // Additional Libraries - each one of these will need to be installed.
 // ----------------------------
