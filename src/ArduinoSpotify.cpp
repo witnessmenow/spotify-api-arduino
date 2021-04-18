@@ -394,6 +394,7 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
 
 #ifdef SPOTIFY_DEBUG
     Serial.println(command);
+    printStack();
 #endif
 
     if (autoTokenRefresh)
@@ -418,6 +419,7 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 
 #ifdef SPOTIFY_DEBUG
     Serial.println(command);
+    printStack();
 #endif
 
     // Get from https://arduinojson.org/v6/assistant/
@@ -429,12 +431,11 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
     {
         checkAndRefreshAccessToken();
     }
-    Serial.print("Making Request: ");
     int statusCode = makeGetRequest(command, _bearerToken);
-    Serial.print("Finished: ");
 #ifdef SPOTIFY_DEBUG
     Serial.print("Status Code: ");
     Serial.println(statusCode);
+    printStack();
 #endif
     if (statusCode > 0)
     {
@@ -449,16 +450,20 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
         //StaticJsonDocument<288> filter;
         filter["is_playing"] = true;
         filter["progress_ms"] = true;
+
         JsonObject filter_item = filter.createNestedObject("item");
         filter_item["duration_ms"] = true;
         filter_item["name"] = true;
         filter_item["uri"] = true;
+
+        JsonObject filter_item_artists_0 = filter_item["artists"].createNestedObject();
+        filter_item_artists_0["name"] = true;
+        filter_item_artists_0["uri"] = true;
+
         JsonObject filter_item_album = filter_item.createNestedObject("album");
         filter_item_album["name"] = true;
         filter_item_album["uri"] = true;
-        JsonObject filter_item_album_artists_0 = filter_item_album["artists"].createNestedObject();
-        filter_item_album_artists_0["name"] = true;
-        filter_item_album_artists_0["uri"] = true;
+
         JsonObject filter_item_album_images_0 = filter_item_album["images"].createNestedObject();
         filter_item_album_images_0["height"] = true;
         filter_item_album_images_0["width"] = true;
@@ -471,8 +476,11 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
         DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
         if (!error)
         {
+#ifdef SPOTIFY_DEBUG
+            serializeJsonPretty(doc, Serial);
+#endif
             JsonObject item = doc["item"];
-            JsonObject firstArtist = item["album"]["artists"][0];
+            JsonObject firstArtist = item["artists"][0];
 
             strncpy(currentlyPlaying.firstArtistName, firstArtist["name"].as<char *>(), SPOTIFY_NAME_CHAR_LENGTH);
             currentlyPlaying.firstArtistName[SPOTIFY_NAME_CHAR_LENGTH-1] = '\0'; //In case the song was longer than the size of buffer
@@ -502,14 +510,19 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
             {
                 currentlyPlaying.numImages = numImages;
             }
+#ifdef SPOTIFY_DEBUG
+            Serial.print(F("Num Images: "));
+            Serial.println(currentlyPlaying.numImages);
+            Serial.println(numImages);
+#endif
 
             for (int i = 0; i < numImages; i++)
             {
                 int adjustedIndex = startingIndex + i;
                 currentlyPlaying.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
                 currentlyPlaying.albumImages[i].width = images[adjustedIndex]["width"].as<int>();
-                // strncpy(currentlyPlaying.albumImages[i].url, images[adjustedIndex]["url"].as<char *>(), SPOTIFY_URL_CHAR_LENGTH);
-                // currentlyPlaying.albumImages[i].url[SPOTIFY_URL_CHAR_LENGTH-1] = '\0';
+                strncpy(currentlyPlaying.albumImages[i].url, images[adjustedIndex]["url"].as<char *>(), SPOTIFY_URL_CHAR_LENGTH);
+                currentlyPlaying.albumImages[i].url[SPOTIFY_URL_CHAR_LENGTH-1] = '\0';
                 //currentlyPlaying.albumImages[i].url = (char *)images[adjustedIndex]["url"].as<char *>();
             }
 
@@ -553,6 +566,7 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
 
 #ifdef SPOTIFY_DEBUG
     Serial.println(command);
+    printStack();
 #endif
 
     // Get from https://arduinojson.org/v6/assistant/
@@ -836,3 +850,12 @@ void ArduinoSpotify::closeClient()
         client->stop();
     }
 }
+
+#ifdef SPOTIFY_DEBUG
+void ArduinoSpotify::printStack()
+{
+    char stack;
+    Serial.print (F("stack size "));
+    Serial.println (stack_start - &stack);
+}
+#endif

@@ -59,7 +59,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
-#define SPOTIFY_NUM_ALBUM_IMAGES 1
+#define SPOTIFY_NUM_ALBUM_IMAGES 3
 
 enum RepeatOptions
 {
@@ -72,7 +72,7 @@ struct SpotifyImage
 {
   int height;
   int width;
-  //char url[SPOTIFY_URL_CHAR_LENGTH];
+  char url[SPOTIFY_URL_CHAR_LENGTH];
 };
 
 struct SpotifyDevice
@@ -159,6 +159,9 @@ public:
   int playerDetailsBufferSize = 2000;
   bool autoTokenRefresh = true;
   Client *client;
+#ifdef SPOTIFY_DEBUG
+  char *stack_start;
+#endif
 
 private:
   char _bearerToken[200];
@@ -177,6 +180,9 @@ private:
       R"(grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s)";
   const char *refreshAccessTokensBody =
       R"(grant_type=refresh_token&refresh_token=%s&client_id=%s&client_secret=%s)";
+#ifdef SPOTIFY_DEBUG
+  void printStack();
+#endif
 };
 
 #endif
