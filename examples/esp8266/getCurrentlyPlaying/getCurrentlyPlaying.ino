@@ -62,7 +62,7 @@ char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your sp
 //------- ---------------------- ------
 
 WiFiClientSecure client;
-ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
+ArduinoSpotify *spotify;
 
 unsigned long delayBetweenRequests = 60000; // Time between requests (1 minute)
 unsigned long requestDueTime;               //time when request due
@@ -70,8 +70,9 @@ unsigned long requestDueTime;               //time when request due
 
 void setup() {
 
-  Serial.begin(115200);
+    Serial.begin(115200);
 
+    spotify = new ArduinoSpotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
     // Set WiFi to station mode and disconnect from an AP if it was Previously
     // connected
     WiFi.mode(WIFI_STA);
@@ -100,7 +101,7 @@ void setup() {
     // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
 
     Serial.println("Refreshing Access Tokens");
-    if(!spotify.refreshAccessToken()){
+    if(!spotify->refreshAccessToken()){
         Serial.println("Failed to get access tokens");
     }
 }
@@ -184,8 +185,8 @@ void loop() {
         Serial.println(ESP.getFreeHeap());
 
         Serial.println("getting currently playing song:");
-        // Market can be excluded if you want e.g. spotify.getCurrentlyPlaying()
-        CurrentlyPlaying currentlyPlaying = spotify.getCurrentlyPlaying(SPOTIFY_MARKET);
+        // Market can be excluded if you want e.g. spotify->getCurrentlyPlaying()
+        CurrentlyPlaying currentlyPlaying = spotify->getCurrentlyPlaying(SPOTIFY_MARKET);
 
         printCurrentlyPlayingToSerial(currentlyPlaying);
 

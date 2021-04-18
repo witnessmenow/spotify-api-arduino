@@ -1,6 +1,12 @@
 /*******************************************************************
     Displays Album Art on an 64 x 64 RGB LED Matrix
 
+    There is two approaches to this demoed in this example
+      - "displayImage" uses a memory buffer, it should be the fastest but possible uses the most memory.
+      - "displayImageUsingFile" uses a File reference
+
+    All references to SPIFFS are only required for the "displayImageUsingFile" path.
+
     This example could easily be adapted to any Adafruit GFX
     based screen.
 
@@ -40,7 +46,6 @@
 #define FS_NO_GLOBALS
 #include <FS.h>
 #include "SPIFFS.h"
-
 
 // ----------------------------
 // Additional Libraries - each one of these will need to be installed.
@@ -173,7 +178,7 @@ void setup() {
     Serial.println("Failed to get access tokens");
   }
 }
-int displayImage(char *albumArtUrl) {
+int displayImageUsingFile(char *albumArtUrl) {
 
   // In this example I reuse the same filename
   // over and over, maybe saving the art using
@@ -198,6 +203,23 @@ int displayImage(char *albumArtUrl) {
 
   if (gotImage) {
     return TJpgDec.drawFsJpg(0, 0, ALBUM_ART);
+  } else {
+    return -2;
+  }
+}
+
+int displayImage(char *albumArtUrl) {
+
+  uint8_t *imageFile; // pointer that the library will store the image at (uses malloc)
+  int imageSize; // library will update the size of the image
+  bool gotImage = spotify.getImage(albumArtUrl, &imageFile, &imageSize);
+
+  if (gotImage) {
+    Serial.print("Got Image");
+    delay(1);
+    int jpegStatus = TJpgDec.drawJpg(0, 0, imageFile, imageSize);
+    free(imageFile); // Make sure to free the memory!
+    return jpegStatus;
   } else {
     return -2;
   }
@@ -272,7 +294,8 @@ void loop() {
       String newAlbum = String(smallestImage.url);
       if (newAlbum != lastAlbumArtUrl) {
         Serial.println("Updating Art");
-        int displayImageResult = displayImage(smallestImage.url);
+        //int displayImageResult = displayImageUsingFile(smallestImage.url); File reference example
+        int displayImageResult = displayImage(smallestImage.url); // Memory Buffer Example - should be much faster
         if (displayImageResult == 0) {
           lastAlbumArtUrl = newAlbum;
         } else {

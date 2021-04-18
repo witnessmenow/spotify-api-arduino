@@ -149,7 +149,7 @@ void ArduinoSpotify::setRefreshToken(const char *refreshToken)
 
 bool ArduinoSpotify::refreshAccessToken()
 {
-    char body[1000];
+    char body[300];
     sprintf(body, refreshAccessTokensBody, _refreshToken, _clientId, _clientSecret);
 
 #ifdef SPOTIFY_DEBUG
@@ -207,7 +207,7 @@ bool ArduinoSpotify::checkAndRefreshAccessToken()
 const char *ArduinoSpotify::requestAccessTokens(const char *code, const char *redirectUrl)
 {
 
-    char body[1000];
+    char body[400];
     sprintf(body, requestAccessTokensBody, code, redirectUrl, _clientId, _clientSecret);
 
 #ifdef SPOTIFY_DEBUG
@@ -394,6 +394,7 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
 
 #ifdef SPOTIFY_DEBUG
     Serial.println(command);
+    printStack();
 #endif
 
     if (autoTokenRefresh)
@@ -408,29 +409,34 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
 
 CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 {
-    char command[100] = SPOTIFY_CURRENTLY_PLAYING_ENDPOINT;
+    char command[50] = SPOTIFY_CURRENTLY_PLAYING_ENDPOINT;
     if (market[0] != 0)
     {
-        char marketBuff[30];
+        char marketBuff[15];
         sprintf(marketBuff, "?market=%s", market);
         strcat(command, marketBuff);
     }
 
 #ifdef SPOTIFY_DEBUG
     Serial.println(command);
+    printStack();
 #endif
 
     // Get from https://arduinojson.org/v6/assistant/
     const size_t bufferSize = currentlyPlayingBufferSize;
-    CurrentlyPlaying currentlyPlaying;
+    //CurrentlyPlaying currentlyPlaying;
     // This flag will get cleared if all goes well
     currentlyPlaying.error = true;
     if (autoTokenRefresh)
     {
         checkAndRefreshAccessToken();
     }
-
     int statusCode = makeGetRequest(command, _bearerToken);
+#ifdef SPOTIFY_DEBUG
+    Serial.print("Status Code: ");
+    Serial.println(statusCode);
+    printStack();
+#endif
     if (statusCode > 0)
     {
         skipHeaders();
@@ -439,21 +445,56 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 
     if (statusCode == 200)
     {
+        //Apply Json Filter: https://arduinojson.org/v6/example/filter/
+        DynamicJsonDocument filter(288);
+        //StaticJsonDocument<288> filter;
+        filter["is_playing"] = true;
+        filter["progress_ms"] = true;
+
+        JsonObject filter_item = filter.createNestedObject("item");
+        filter_item["duration_ms"] = true;
+        filter_item["name"] = true;
+        filter_item["uri"] = true;
+
+        JsonObject filter_item_artists_0 = filter_item["artists"].createNestedObject();
+        filter_item_artists_0["name"] = true;
+        filter_item_artists_0["uri"] = true;
+
+        JsonObject filter_item_album = filter_item.createNestedObject("album");
+        filter_item_album["name"] = true;
+        filter_item_album["uri"] = true;
+
+        JsonObject filter_item_album_images_0 = filter_item_album["images"].createNestedObject();
+        filter_item_album_images_0["height"] = true;
+        filter_item_album_images_0["width"] = true;
+        filter_item_album_images_0["url"] = true;
+
         // Allocate DynamicJsonDocument
         DynamicJsonDocument doc(bufferSize);
 
         // Parse JSON object
-        DeserializationError error = deserializeJson(doc, *client);
+        DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
         if (!error)
         {
+#ifdef SPOTIFY_DEBUG
+            serializeJsonPretty(doc, Serial);
+#endif
             JsonObject item = doc["item"];
-            JsonObject firstArtist = item["album"]["artists"][0];
+            JsonObject firstArtist = item["artists"][0];
 
-            currentlyPlaying.firstArtistName = (char *)firstArtist["name"].as<char *>();
-            currentlyPlaying.firstArtistUri = (char *)firstArtist["uri"].as<char *>();
+            strncpy(currentlyPlaying.firstArtistName, firstArtist["name"].as<char *>(), SPOTIFY_NAME_CHAR_LENGTH);
+            currentlyPlaying.firstArtistName[SPOTIFY_NAME_CHAR_LENGTH-1] = '\0'; //In case the song was longer than the size of buffer
+            strncpy(currentlyPlaying.firstArtistUri, firstArtist["uri"].as<char *>(), SPOTIFY_URI_CHAR_LENGTH);
+            currentlyPlaying.firstArtistUri[SPOTIFY_URI_CHAR_LENGTH-1] = '\0';
+            //currentlyPlaying.firstArtistName = (char *)firstArtist["name"].as<char *>();
+            //currentlyPlaying.firstArtistUri = (char *)firstArtist["uri"].as<char *>();
 
-            currentlyPlaying.albumName = (char *)item["album"]["name"].as<char *>();
-            currentlyPlaying.albumUri = (char *)item["album"]["uri"].as<char *>();
+            strncpy(currentlyPlaying.albumName, item["album"]["name"].as<char *>(), SPOTIFY_NAME_CHAR_LENGTH);
+            currentlyPlaying.albumName[SPOTIFY_NAME_CHAR_LENGTH-1] = '\0';
+            strncpy(currentlyPlaying.albumUri, item["album"]["uri"].as<char *>(), SPOTIFY_URI_CHAR_LENGTH);
+            currentlyPlaying.albumUri[SPOTIFY_URI_CHAR_LENGTH-1] = '\0';
+            //currentlyPlaying.albumName = (char *)item["album"]["name"].as<char *>();
+            //currentlyPlaying.albumUri = (char *)item["album"]["uri"].as<char *>();
 
             JsonArray images = item["album"]["images"];
 
@@ -469,17 +510,28 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
             {
                 currentlyPlaying.numImages = numImages;
             }
+#ifdef SPOTIFY_DEBUG
+            Serial.print(F("Num Images: "));
+            Serial.println(currentlyPlaying.numImages);
+            Serial.println(numImages);
+#endif
 
             for (int i = 0; i < numImages; i++)
             {
                 int adjustedIndex = startingIndex + i;
                 currentlyPlaying.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
                 currentlyPlaying.albumImages[i].width = images[adjustedIndex]["width"].as<int>();
-                currentlyPlaying.albumImages[i].url = (char *)images[adjustedIndex]["url"].as<char *>();
+                strncpy(currentlyPlaying.albumImages[i].url, images[adjustedIndex]["url"].as<char *>(), SPOTIFY_URL_CHAR_LENGTH);
+                currentlyPlaying.albumImages[i].url[SPOTIFY_URL_CHAR_LENGTH-1] = '\0';
+                //currentlyPlaying.albumImages[i].url = (char *)images[adjustedIndex]["url"].as<char *>();
             }
 
-            currentlyPlaying.trackName = (char *)item["name"].as<char *>();
-            currentlyPlaying.trackUri = (char *)item["uri"].as<char *>();
+            strncpy(currentlyPlaying.trackName, item["name"].as<char *>(), SPOTIFY_NAME_CHAR_LENGTH);
+            currentlyPlaying.trackName[SPOTIFY_NAME_CHAR_LENGTH-1] = '\0';
+            strncpy(currentlyPlaying.trackUri, item["uri"].as<char *>(), SPOTIFY_URI_CHAR_LENGTH);
+            currentlyPlaying.trackUri[SPOTIFY_URI_CHAR_LENGTH-1] = '\0';
+            //currentlyPlaying.trackName = (char *)item["name"].as<char *>();
+            //currentlyPlaying.trackUri = (char *)item["uri"].as<char *>();
 
             currentlyPlaying.isPlaying = doc["is_playing"].as<bool>();
 
@@ -514,6 +566,7 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
 
 #ifdef SPOTIFY_DEBUG
     Serial.println(command);
+    printStack();
 #endif
 
     // Get from https://arduinojson.org/v6/assistant/
@@ -527,6 +580,10 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
     }
 
     int statusCode = makeGetRequest(command, _bearerToken);
+#ifdef SPOTIFY_DEBUG
+    Serial.print("Status Code: ");
+    Serial.println(statusCode);
+#endif
     if (statusCode > 0)
     {
         skipHeaders();
@@ -535,11 +592,27 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
 
     if (statusCode == 200)
     {
+
+        //StaticJsonDocument<192> filter;
+        DynamicJsonDocument filter(192);
+        JsonObject filter_device = filter.createNestedObject("device");
+        filter_device["id"] = true;
+        filter_device["name"] = true;
+        filter_device["type"] = true;
+        filter_device["is_active"] = true;
+        filter_device["is_private_session"] = true;
+        filter_device["is_restricted"] = true;
+        filter_device["volume_percent"] = true;
+        filter["progress_ms"] = true;
+        filter["is_playing"] = true;
+        filter["shuffle_state"] = true;
+        filter["repeat_state"] = true;
+
         // Allocate DynamicJsonDocument
         DynamicJsonDocument doc(bufferSize);
 
         // Parse JSON object
-        DeserializationError error = deserializeJson(doc, *client);
+        DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
         if (!error)
         {
             JsonObject device = doc["device"];
@@ -588,7 +661,7 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
     return playerDetails;
 }
 
-bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
+int ArduinoSpotify::commonGetImage(char *imageUrl)
 {
 #ifdef SPOTIFY_DEBUG
     Serial.print(F("Parsing image URL: "));
@@ -638,7 +711,6 @@ bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
     Serial.println(strlen(path));
 #endif
 
-    bool status = false;
     int statusCode = makeGetRequest(path, NULL, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8", host);
 #ifdef SPOTIFY_DEBUG
     Serial.print(F("statusCode: "));
@@ -646,53 +718,119 @@ bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
 #endif
     if (statusCode == 200)
     {
-        int totalLength = getContentLength();
+        return getContentLength();
+    }
+
+    // Failed
+    return -1;
+}
+
+bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
+{
+    int totalLength = commonGetImage(imageUrl);
+
 #ifdef SPOTIFY_DEBUG
-        Serial.print(F("file length: "));
-        Serial.println(totalLength);
+    Serial.print(F("file length: "));
+    Serial.println(totalLength);
 #endif
-        if (totalLength > 0)
+    if (totalLength > 0)
+    {
+        skipHeaders(false);
+        int remaining = totalLength;
+        // This section of code is inspired but the "Web_Jpg"
+        // example of TJpg_Decoder
+        // https://github.com/Bodmer/TJpg_Decoder
+        // -----------
+        uint8_t buff[128] = {0};
+        while (client->connected() && (remaining > 0 || remaining == -1))
         {
-            skipHeaders(false);
-            int remaining = totalLength;
-            // This section of code is inspired but the "Web_Jpg"
-            // example of TJpg_Decoder
-            // https://github.com/Bodmer/TJpg_Decoder
-            // -----------
-            uint8_t buff[128] = {0};
-            while (client->connected() && (remaining > 0 || remaining == -1))
+            // Get available data size
+            size_t size = client->available();
+
+            if (size)
             {
-                // Get available data size
-                size_t size = client->available();
+                // Read up to 128 bytes
+                int c = client->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
 
-                if (size)
+                // Write it to file
+                file->write(buff, c);
+
+                // Calculate remaining bytes
+                if (remaining > 0)
                 {
-                    // Read up to 128 bytes
-                    int c = client->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
-
-                    // Write it to file
-                    file->write(buff, c);
-
-                    // Calculate remaining bytes
-                    if (remaining > 0)
-                    {
-                        remaining -= c;
-                    }
+                    remaining -= c;
                 }
-                yield();
             }
+            yield();
+        }
 // ---------
 #ifdef SPOTIFY_DEBUG
-            Serial.println(F("Finished getting image"));
+        Serial.println(F("Finished getting image"));
 #endif
-            // probably?!
-            status = true;
-        }
     }
 
     closeClient();
 
-    return status;
+    return (totalLength > 0); //Probably could be improved!
+}
+
+bool ArduinoSpotify::getImage(char *imageUrl, uint8_t **image, int *imageLength)
+{
+    int totalLength = commonGetImage(imageUrl);
+
+#ifdef SPOTIFY_DEBUG
+    Serial.print(F("file length: "));
+    Serial.println(totalLength);
+#endif
+    if (totalLength > 0)
+    {
+        skipHeaders(false);
+        uint8_t *imgPtr = (uint8_t *) malloc(totalLength);
+        *image = imgPtr;
+        *imageLength = totalLength;
+        int remaining = totalLength;
+        int amountRead = 0;
+
+#ifdef SPOTIFY_DEBUG
+    Serial.println(F("Fetching Image"));
+#endif
+
+        // This section of code is inspired but the "Web_Jpg"
+        // example of TJpg_Decoder
+        // https://github.com/Bodmer/TJpg_Decoder
+        // -----------
+        uint8_t buff[128] = {0};
+        while (client->connected() && (remaining > 0 || remaining == -1))
+        {
+            // Get available data size
+            size_t size = client->available();
+
+            if (size)
+            {
+                // Read up to 128 bytes
+                int c = client->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+
+                // Write it to file
+                memcpy( (uint8_t*)imgPtr + amountRead , (uint8_t*)buff , c );
+
+                // Calculate remaining bytes
+                if (remaining > 0)
+                {
+                    amountRead += c;
+                    remaining -= c;
+                }
+            }
+            yield();
+        }
+// ---------
+#ifdef SPOTIFY_DEBUG
+        Serial.println(F("Finished getting image"));
+#endif
+    }
+
+    closeClient();
+
+    return (totalLength > 0); //Probably could be improved!
 }
 
 int ArduinoSpotify::getContentLength()
@@ -777,3 +915,12 @@ void ArduinoSpotify::closeClient()
         client->stop();
     }
 }
+
+#ifdef SPOTIFY_DEBUG
+void ArduinoSpotify::printStack()
+{
+    char stack;
+    Serial.print (F("stack size "));
+    Serial.println (stack_start - &stack);
+}
+#endif

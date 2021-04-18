@@ -62,13 +62,13 @@ char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your sp
 //------- ---------------------- ------
 
 WiFiClientSecure client;
-ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
+ArduinoSpotify *spotify;
 
 
 void setup() {
 
-  Serial.begin(115200);
-
+    Serial.begin(115200);
+    spotify = new ArduinoSpotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
     // Set WiFi to station mode and disconnect from an AP if it was Previously
     // connected
     WiFi.mode(WIFI_STA);
@@ -97,24 +97,24 @@ void setup() {
     // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
 
     Serial.println("Refreshing Access Tokens");
-    if(!spotify.refreshAccessToken()){
+    if(!spotify->refreshAccessToken()){
         Serial.println("Failed to get access tokens");
         return;
     }
 
     delay(1000);
     Serial.print("Going to start of track...");
-    if(spotify.seek(0)){
+    if(spotify->seek(0)){
         Serial.println("done!");
     }
     delay(2000);
     Serial.print("Going to previous track...");
-    if(spotify.previousTrack()){
+    if(spotify->previousTrack()){
         Serial.println("done!");
     }
     delay(2000);
     Serial.print("Skipping to next track...");
-    if(spotify.nextTrack()){
+    if(spotify->nextTrack()){
         Serial.println("done!");
     }
 
@@ -122,49 +122,49 @@ void setup() {
     // It does work on my Desktop client
     delay(2000);
     Serial.print("set Volume 10%...");
-    if(spotify.setVolume(10)){
+    if(spotify->setVolume(10)){
         Serial.println("done!");
     }
     delay(2000);
     Serial.print("set Volume 70%...");
-    if(spotify.setVolume(70)){
+    if(spotify->setVolume(70)){
         Serial.println("done!");
     }
     delay(2000);
     Serial.print("Pausing...");
-    if(spotify.pause()){
+    if(spotify->pause()){
         Serial.println("done!");
     }
     delay(2000);
     Serial.print("Playing...");
-    if(spotify.play()){
+    if(spotify->play()){
         Serial.println("done!");
     }
 
     delay(3000);
     Serial.print("enabling shuffle...");
-    if(spotify.toggleShuffle(true)){
+    if(spotify->toggleShuffle(true)){
         Serial.println("done!");
     }
     delay(3000);
     Serial.print("disabling shuffle...");
-    if(spotify.toggleShuffle(false)){
+    if(spotify->toggleShuffle(false)){
         Serial.println("done!");
     }
 
     delay(3000);
     Serial.print("Setting repeat mode to 'track'...");
-    if(spotify.setRepeatMode(repeat_track)){
+    if(spotify->setRepeatMode(repeat_track)){
         Serial.println("done!");
     }
     delay(3000);
     Serial.print("Setting repeat mode to 'context'...");
-    if(spotify.setRepeatMode(repeat_context)){
+    if(spotify->setRepeatMode(repeat_context)){
         Serial.println("done!");
     }
     delay(3000);
     Serial.print("Setting repeat mode to 'off'...");
-    if(spotify.setRepeatMode(repeat_off)){
+    if(spotify->setRepeatMode(repeat_off)){
         Serial.println("done!");
     }
 }

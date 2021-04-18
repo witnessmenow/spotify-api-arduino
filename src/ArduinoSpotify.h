@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 // NOTE: Do not use this option on live-streams, it will reveal your
 // private tokens!
 
-//#define SPOTIFY_DEBUG 1
+#define SPOTIFY_DEBUG 1
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -37,6 +37,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 // Fingerprint correct as of July 23rd, 2020
 #define SPOTIFY_FINGERPRINT "B9 79 6B CE FD 61 21 97 A7 02 90 EE DA CD F0 A0 44 13 0E EB"
 #define SPOTIFY_TIMEOUT 2000
+
+#define SPOTIFY_NAME_CHAR_LENGTH 100 //Increase if artists/song/album names are being cut off
+#define SPOTIFY_URI_CHAR_LENGTH 40
+#define SPOTIFY_URL_CHAR_LENGTH 70
 
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
 
@@ -68,7 +72,7 @@ struct SpotifyImage
 {
   int height;
   int width;
-  char *url;
+  char url[SPOTIFY_URL_CHAR_LENGTH];
 };
 
 struct SpotifyDevice
@@ -97,13 +101,13 @@ struct PlayerDetails
 
 struct CurrentlyPlaying
 {
-  char *firstArtistName;
-  char *firstArtistUri;
-  char *albumName;
-  char *albumUri;
-  char *trackName;
-  char *trackUri;
-  SpotifyImage albumImages[3];
+  char firstArtistName[SPOTIFY_NAME_CHAR_LENGTH];
+  char firstArtistUri[SPOTIFY_URI_CHAR_LENGTH];
+  char albumName[SPOTIFY_NAME_CHAR_LENGTH];
+  char albumUri[SPOTIFY_URI_CHAR_LENGTH];
+  char trackName[SPOTIFY_NAME_CHAR_LENGTH];
+  char trackUri[SPOTIFY_URI_CHAR_LENGTH];
+  SpotifyImage albumImages[SPOTIFY_NUM_ALBUM_IMAGES];
   int numImages;
   bool isPlaying;
   long progressMs;
@@ -148,13 +152,17 @@ public:
 
   // Image methods
   bool getImage(char *imageUrl, Stream *file);
+  bool getImage(char *imageUrl, uint8_t **image, int *imageLength);
 
   int portNumber = 443;
   int tagArraySize = 10;
-  int currentlyPlayingBufferSize = 10000;
-  int playerDetailsBufferSize = 10000;
+  int currentlyPlayingBufferSize = 3000;
+  int playerDetailsBufferSize = 2000;
   bool autoTokenRefresh = true;
   Client *client;
+#ifdef SPOTIFY_DEBUG
+  char *stack_start;
+#endif
 
 private:
   char _bearerToken[200];
@@ -163,6 +171,8 @@ private:
   const char *_clientSecret;
   unsigned int timeTokenRefreshed;
   unsigned int tokenTimeToLiveMs;
+  CurrentlyPlaying currentlyPlaying;
+  int commonGetImage(char *imageUrl);
   int getContentLength();
   int getHttpStatusCode();
   void skipHeaders(bool tossUnexpectedForJSON = true);
@@ -172,6 +182,9 @@ private:
       R"(grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s)";
   const char *refreshAccessTokensBody =
       R"(grant_type=refresh_token&refresh_token=%s&client_id=%s&client_secret=%s)";
+#ifdef SPOTIFY_DEBUG
+  void printStack();
+#endif
 };
 
 #endif
