@@ -152,6 +152,7 @@ public:
 
   // Image methods
   bool getImage(char *imageUrl, Stream *file);
+  bool getImage(char *imageUrl, uint8_t **image, int *imageLength);
 
   int portNumber = 443;
   int tagArraySize = 10;
@@ -171,6 +172,7 @@ private:
   unsigned int timeTokenRefreshed;
   unsigned int tokenTimeToLiveMs;
   CurrentlyPlaying currentlyPlaying;
+  int commonGetImage(char *imageUrl);
   int getContentLength();
   int getHttpStatusCode();
   void skipHeaders(bool tossUnexpectedForJSON = true);

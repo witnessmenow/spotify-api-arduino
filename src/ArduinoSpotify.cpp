@@ -661,7 +661,7 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
     return playerDetails;
 }
 
-bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
+int ArduinoSpotify::commonGetImage(char *imageUrl)
 {
 #ifdef SPOTIFY_DEBUG
     Serial.print(F("Parsing image URL: "));
@@ -711,7 +711,6 @@ bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
     Serial.println(strlen(path));
 #endif
 
-    bool status = false;
     int statusCode = makeGetRequest(path, NULL, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8", host);
 #ifdef SPOTIFY_DEBUG
     Serial.print(F("statusCode: "));
@@ -719,53 +718,119 @@ bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
 #endif
     if (statusCode == 200)
     {
-        int totalLength = getContentLength();
+        return getContentLength();
+    }
+
+    // Failed
+    return -1;
+}
+
+bool ArduinoSpotify::getImage(char *imageUrl, Stream *file)
+{
+    int totalLength = commonGetImage(imageUrl);
+
 #ifdef SPOTIFY_DEBUG
-        Serial.print(F("file length: "));
-        Serial.println(totalLength);
+    Serial.print(F("file length: "));
+    Serial.println(totalLength);
 #endif
-        if (totalLength > 0)
+    if (totalLength > 0)
+    {
+        skipHeaders(false);
+        int remaining = totalLength;
+        // This section of code is inspired but the "Web_Jpg"
+        // example of TJpg_Decoder
+        // https://github.com/Bodmer/TJpg_Decoder
+        // -----------
+        uint8_t buff[128] = {0};
+        while (client->connected() && (remaining > 0 || remaining == -1))
         {
-            skipHeaders(false);
-            int remaining = totalLength;
-            // This section of code is inspired but the "Web_Jpg"
-            // example of TJpg_Decoder
-            // https://github.com/Bodmer/TJpg_Decoder
-            // -----------
-            uint8_t buff[128] = {0};
-            while (client->connected() && (remaining > 0 || remaining == -1))
+            // Get available data size
+            size_t size = client->available();
+
+            if (size)
             {
-                // Get available data size
-                size_t size = client->available();
+                // Read up to 128 bytes
+                int c = client->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
 
-                if (size)
+                // Write it to file
+                file->write(buff, c);
+
+                // Calculate remaining bytes
+                if (remaining > 0)
                 {
-                    // Read up to 128 bytes
-                    int c = client->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
-
-                    // Write it to file
-                    file->write(buff, c);
-
-                    // Calculate remaining bytes
-                    if (remaining > 0)
-                    {
-                        remaining -= c;
-                    }
+                    remaining -= c;
                 }
-                yield();
             }
+            yield();
+        }
 // ---------
 #ifdef SPOTIFY_DEBUG
-            Serial.println(F("Finished getting image"));
+        Serial.println(F("Finished getting image"));
 #endif
-            // probably?!
-            status = true;
-        }
     }
 
     closeClient();
 
-    return status;
+    return (totalLength > 0); //Probably could be improved!
+}
+
+bool ArduinoSpotify::getImage(char *imageUrl, uint8_t **image, int *imageLength)
+{
+    int totalLength = commonGetImage(imageUrl);
+
+#ifdef SPOTIFY_DEBUG
+    Serial.print(F("file length: "));
+    Serial.println(totalLength);
+#endif
+    if (totalLength > 0)
+    {
+        skipHeaders(false);
+        uint8_t *imgPtr = (uint8_t *) malloc(totalLength);
+        *image = imgPtr;
+        *imageLength = totalLength;
+        int remaining = totalLength;
+        int amountRead = 0;
+
+#ifdef SPOTIFY_DEBUG
+    Serial.println(F("Fetching Image"));
+#endif
+
+        // This section of code is inspired but the "Web_Jpg"
+        // example of TJpg_Decoder
+        // https://github.com/Bodmer/TJpg_Decoder
+        // -----------
+        uint8_t buff[128] = {0};
+        while (client->connected() && (remaining > 0 || remaining == -1))
+        {
+            // Get available data size
+            size_t size = client->available();
+
+            if (size)
+            {
+                // Read up to 128 bytes
+                int c = client->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+
+                // Write it to file
+                memcpy( (uint8_t*)imgPtr + amountRead , (uint8_t*)buff , c );
+
+                // Calculate remaining bytes
+                if (remaining > 0)
+                {
+                    amountRead += c;
+                    remaining -= c;
+                }
+            }
+            yield();
+        }
+// ---------
+#ifdef SPOTIFY_DEBUG
+        Serial.println(F("Finished getting image"));
+#endif
+    }
+
+    closeClient();
+
+    return (totalLength > 0); //Probably could be improved!
 }
 
 int ArduinoSpotify::getContentLength()
