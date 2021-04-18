@@ -422,15 +422,20 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
 
     // Get from https://arduinojson.org/v6/assistant/
     const size_t bufferSize = currentlyPlayingBufferSize;
-    CurrentlyPlaying currentlyPlaying;
+    //CurrentlyPlaying currentlyPlaying;
     // This flag will get cleared if all goes well
     currentlyPlaying.error = true;
     if (autoTokenRefresh)
     {
         checkAndRefreshAccessToken();
     }
-
+    Serial.print("Making Request: ");
     int statusCode = makeGetRequest(command, _bearerToken);
+    Serial.print("Finished: ");
+#ifdef SPOTIFY_DEBUG
+    Serial.print("Status Code: ");
+    Serial.println(statusCode);
+#endif
     if (statusCode > 0)
     {
         skipHeaders();
@@ -468,11 +473,19 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
             JsonObject item = doc["item"];
             JsonObject firstArtist = item["album"]["artists"][0];
 
-            currentlyPlaying.firstArtistName = (char *)firstArtist["name"].as<char *>();
-            currentlyPlaying.firstArtistUri = (char *)firstArtist["uri"].as<char *>();
+            strncpy(currentlyPlaying.firstArtistName, firstArtist["name"].as<char *>(), SPOTIFY_NAME_CHAR_LENGTH);
+            currentlyPlaying.firstArtistName[SPOTIFY_NAME_CHAR_LENGTH-1] = '\0'; //In case the song was longer than the size of buffer
+            strncpy(currentlyPlaying.firstArtistUri, firstArtist["uri"].as<char *>(), SPOTIFY_URI_CHAR_LENGTH);
+            currentlyPlaying.firstArtistUri[SPOTIFY_URI_CHAR_LENGTH-1] = '\0';
+            //currentlyPlaying.firstArtistName = (char *)firstArtist["name"].as<char *>();
+            //currentlyPlaying.firstArtistUri = (char *)firstArtist["uri"].as<char *>();
 
-            currentlyPlaying.albumName = (char *)item["album"]["name"].as<char *>();
-            currentlyPlaying.albumUri = (char *)item["album"]["uri"].as<char *>();
+            strncpy(currentlyPlaying.albumName, item["album"]["name"].as<char *>(), SPOTIFY_NAME_CHAR_LENGTH);
+            currentlyPlaying.albumName[SPOTIFY_NAME_CHAR_LENGTH-1] = '\0';
+            strncpy(currentlyPlaying.albumUri, item["album"]["uri"].as<char *>(), SPOTIFY_URI_CHAR_LENGTH);
+            currentlyPlaying.albumUri[SPOTIFY_URI_CHAR_LENGTH-1] = '\0';
+            //currentlyPlaying.albumName = (char *)item["album"]["name"].as<char *>();
+            //currentlyPlaying.albumUri = (char *)item["album"]["uri"].as<char *>();
 
             JsonArray images = item["album"]["images"];
 
@@ -494,11 +507,17 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
                 int adjustedIndex = startingIndex + i;
                 currentlyPlaying.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
                 currentlyPlaying.albumImages[i].width = images[adjustedIndex]["width"].as<int>();
-                currentlyPlaying.albumImages[i].url = (char *)images[adjustedIndex]["url"].as<char *>();
+                strncpy(currentlyPlaying.albumImages[i].url, images[adjustedIndex]["url"].as<char *>(), SPOTIFY_URL_CHAR_LENGTH);
+                currentlyPlaying.albumImages[i].url[SPOTIFY_URL_CHAR_LENGTH-1] = '\0';
+                //currentlyPlaying.albumImages[i].url = (char *)images[adjustedIndex]["url"].as<char *>();
             }
 
-            currentlyPlaying.trackName = (char *)item["name"].as<char *>();
-            currentlyPlaying.trackUri = (char *)item["uri"].as<char *>();
+            strncpy(currentlyPlaying.trackName, item["name"].as<char *>(), SPOTIFY_NAME_CHAR_LENGTH);
+            currentlyPlaying.trackName[SPOTIFY_NAME_CHAR_LENGTH-1] = '\0';
+            strncpy(currentlyPlaying.trackUri, item["uri"].as<char *>(), SPOTIFY_URI_CHAR_LENGTH);
+            currentlyPlaying.trackUri[SPOTIFY_URI_CHAR_LENGTH-1] = '\0';
+            //currentlyPlaying.trackName = (char *)item["name"].as<char *>();
+            //currentlyPlaying.trackUri = (char *)item["uri"].as<char *>();
 
             currentlyPlaying.isPlaying = doc["is_playing"].as<bool>();
 
@@ -546,6 +565,10 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
     }
 
     int statusCode = makeGetRequest(command, _bearerToken);
+#ifdef SPOTIFY_DEBUG
+    Serial.print("Status Code: ");
+    Serial.println(statusCode);
+#endif
     if (statusCode > 0)
     {
         skipHeaders();
