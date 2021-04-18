@@ -91,6 +91,7 @@ struct PlayerDetails
   RepeatOptions repeateState;
   bool shuffleState;
 
+  int statusCode;
   bool error;
 };
 
@@ -108,6 +109,7 @@ struct CurrentlyPlaying
   long progressMs;
   long duraitonMs;
 
+  int statusCode;
   bool error;
 };
 

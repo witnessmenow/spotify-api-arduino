@@ -434,6 +434,7 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
     if (statusCode > 0)
     {
         skipHeaders();
+        currentlyPlaying.statusCode = statusCode;
     }
 
     if (statusCode == 200)
@@ -493,6 +494,10 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
             Serial.println(error.c_str());
         }
     }
+    if (statusCode == 204)
+    {
+        currentlyPlaying.error = false;
+    }
     closeClient();
     return currentlyPlaying;
 }
@@ -525,6 +530,7 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
     if (statusCode > 0)
     {
         skipHeaders();
+        playerDetails.statusCode = statusCode;
     }
 
     if (statusCode == 200)
@@ -573,6 +579,10 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
             Serial.print(F("deserializeJson() failed with code "));
             Serial.println(error.c_str());
         }
+    }
+    if (statusCode == 204)
+    {
+        playerDetails.error = false;
     }
     closeClient();
     return playerDetails;
