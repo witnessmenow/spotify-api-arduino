@@ -34,8 +34,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_HOST "api.spotify.com"
 #define SPOTIFY_ACCOUNTS_HOST "accounts.spotify.com"
-// Fingerprint correct as of July 23rd, 2020
-#define SPOTIFY_FINGERPRINT "B9 79 6B CE FD 61 21 97 A7 02 90 EE DA CD F0 A0 44 13 0E EB"
+// Fingerprint correct as of May 6th, 2021
+#define SPOTIFY_FINGERPRINT "8D 33 E7 61 14 A0 61 EF 6F 5F D5 3C CB 1F C7 6C B8 67 69 BA"
 #define SPOTIFY_TIMEOUT 2000
 
 #define SPOTIFY_NAME_CHAR_LENGTH 100 //Increase if artists/song/album names are being cut off
