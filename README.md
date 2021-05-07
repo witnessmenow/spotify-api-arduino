@@ -13,9 +13,9 @@ Arduino library for integrating with a subset of the [Spotify Web-API](https://d
 
 Working well
 
-### ESP8266 - Currently poorly
+### ESP8266
 
-Seems to be running out of stack memory. I recommend using the library with the ESP32, but if you need to use the ESP8266 you should be able to get it working by modifying `ArduinoSpotify.h` to update the following values.
+Working well
 
 ```
 #define SPOTIFY_NAME_CHAR_LENGTH 80
