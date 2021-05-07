@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 // NOTE: Do not use this option on live-streams, it will reveal your
 // private tokens!
 
-#define SPOTIFY_DEBUG 1
+//#define SPOTIFY_DEBUG 1
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -59,7 +59,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
-#define SPOTIFY_NUM_ALBUM_IMAGES 3
+#define SPOTIFY_NUM_ALBUM_IMAGES 2 // Max spotify returns is 3
 
 enum RepeatOptions
 {

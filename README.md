@@ -1,10 +1,30 @@
 # arduino-spotify-api
+
 ![Travis CI status](https://api.travis-ci.org/witnessmenow/arduino-spotify-api.svg?branch=master)
 ![License](https://img.shields.io/github/license/witnessmenow/arduino-spotify-api)
 ![Release stable](https://badgen.net/github/release/witnessmenow/arduino-spotify-api/stable)  
 Arduino library for integrating with a subset of the [Spotify Web-API](https://developer.spotify.com/documentation/web-api/reference/) (Does not play music)
 
 **Work in progress library - expect changes!**
+
+## Supported Boards:
+
+### ESP32
+
+Working well
+
+### ESP8266 - Currently poorly
+
+Seems to be running out of stack memory. I recommend using the library with the ESP32, but if you need to use the ESP8266 you should be able to get it working by modifying `ArduinoSpotify.h` to update the following values.
+
+```
+#define SPOTIFY_NAME_CHAR_LENGTH 80
+
+
+#define SPOTIFY_NUM_ALBUM_IMAGES 1
+```
+
+The `GetCurrentlyPlaying.ino` example works with this change anyways.
 
 ## Help support what I do!
 
@@ -17,15 +37,15 @@ The Library supports the following features:
 - Get Authentication Tokens
 - Getting your currently playing track
 - Player Controls:
-    - Next
-    - Previous
-    - Seek
-    - Play (basic version, basically resumes a paused track)
-    - Play Advanced (play given song, album, artist)
-    - Pause
-    - Set Volume (doesn't seem to work on my phone, works on desktop though)
-    - Set Repeat Modes
-    - Toggle Shuffle
+  - Next
+  - Previous
+  - Seek
+  - Play (basic version, basically resumes a paused track)
+  - Play Advanced (play given song, album, artist)
+  - Pause
+  - Set Volume (doesn't seem to work on my phone, works on desktop though)
+  - Set Repeat Modes
+  - Toggle Shuffle
 
 ### What needs to be added:
 
@@ -65,14 +85,15 @@ By default the getRefreshToken examples will include the required scopes, but if
 
 put a `%20` between the ones you need.
 
-| Feature        | Required Scope          
-| ------------- |-------------| 
-| Current Playing Song Info      | user-read-playback-state |
-| Player Controls      | user-modify-playback-state      |
+| Feature                   | Required Scope             |
+| ------------------------- | -------------------------- |
+| Current Playing Song Info | user-read-playback-state   |
+| Player Controls           | user-modify-playback-state |
 
 ## Installation
 
 Download zip from Github and install to the Arduino IDE using that.
 
 #### Dependancies
+
 - V6 of Arduino JSON - can be installed through the Arduino Library manager.

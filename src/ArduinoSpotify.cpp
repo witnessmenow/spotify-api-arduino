@@ -37,6 +37,9 @@ ArduinoSpotify::ArduinoSpotify(Client &client, const char *clientId, const char 
 int ArduinoSpotify::makeRequestWithBody(const char *type, const char *command, const char *authorization, const char *body, const char *contentType, const char *host)
 {
     client->flush();
+    #ifdef SPOTIFY_DEBUG
+        Serial.println(host);
+    #endif
     client->setTimeout(SPOTIFY_TIMEOUT);
     if (!client->connect(host, portNumber))
     {
@@ -154,6 +157,7 @@ bool ArduinoSpotify::refreshAccessToken()
 
 #ifdef SPOTIFY_DEBUG
     Serial.println(body);
+    printStack();
 #endif
 
     int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
@@ -516,7 +520,7 @@ CurrentlyPlaying ArduinoSpotify::getCurrentlyPlaying(const char *market)
             Serial.println(numImages);
 #endif
 
-            for (int i = 0; i < numImages; i++)
+            for (int i = 0; i < currentlyPlaying.numImages; i++)
             {
                 int adjustedIndex = startingIndex + i;
                 currentlyPlaying.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
