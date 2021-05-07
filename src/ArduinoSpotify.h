@@ -43,6 +43,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_URI_CHAR_LENGTH 40
 #define SPOTIFY_URL_CHAR_LENGTH 70
 
+#define SPOTIFY_DEVICE_ID_CHAR_LENGTH 45
+#define SPOTIFY_DEVICE_NAME_CHAR_LENGTH 80
+#define SPOTIFY_DEVICE_TYPE_CHAR_LENGTH 30
+
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
 
 #define SPOTIFY_PLAYER_ENDPOINT "/v1/me/player"
@@ -60,7 +64,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
-#define SPOTIFY_NUM_ALBUM_IMAGES 2 // Max spotify returns is 3
+#define SPOTIFY_NUM_ALBUM_IMAGES 2 // Max spotify returns is 3, but the third one is probably too big for an ESP
 
 enum RepeatOptions
 {
@@ -161,6 +165,8 @@ public:
   int playerDetailsBufferSize = 2000;
   bool autoTokenRefresh = true;
   Client *client;
+  void initStructs();
+  void destroyStructs();
 #ifdef SPOTIFY_DEBUG
   char *stack_start;
 #endif
@@ -173,13 +179,13 @@ private:
   unsigned int timeTokenRefreshed;
   unsigned int tokenTimeToLiveMs;
   CurrentlyPlaying currentlyPlaying;
+  PlayerDetails playerDetails;
   int commonGetImage(char *imageUrl);
   int getContentLength();
   int getHttpStatusCode();
   void skipHeaders(bool tossUnexpectedForJSON = true);
   void closeClient();
   void parseError();
-  void initStructs();
   const char *requestAccessTokensBody =
       R"(grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s)";
   const char *refreshAccessTokensBody =

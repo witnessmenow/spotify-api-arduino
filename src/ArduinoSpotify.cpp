@@ -577,7 +577,6 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
 
     // Get from https://arduinojson.org/v6/assistant/
     const size_t bufferSize = playerDetailsBufferSize;
-    PlayerDetails playerDetails;
     // This flag will get cleared if all goes well
     playerDetails.error = true;
     if (autoTokenRefresh)
@@ -622,10 +621,16 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
         if (!error)
         {
             JsonObject device = doc["device"];
-            
-            playerDetails.device.id = (char *)device["id"].as<char *>();
-            playerDetails.device.name = (char *)device["name"].as<char *>();
-            playerDetails.device.type = (char *)device["type"].as<char *>();
+            // Copy into buffer and make the last character a null just incase we went over.
+            strncpy(playerDetails.device.id, (char *)device["id"].as<char *>(), SPOTIFY_DEVICE_ID_CHAR_LENGTH);
+            playerDetails.device.id[SPOTIFY_DEVICE_ID_CHAR_LENGTH-1] = '\0';
+
+            strncpy(playerDetails.device.name, (char *)device["name"].as<char *>(), SPOTIFY_DEVICE_NAME_CHAR_LENGTH);
+            playerDetails.device.name[SPOTIFY_DEVICE_NAME_CHAR_LENGTH-1] = '\0';
+
+            strncpy(playerDetails.device.type, (char *)device["type"].as<char *>(), SPOTIFY_DEVICE_TYPE_CHAR_LENGTH);
+            playerDetails.device.type[SPOTIFY_DEVICE_TYPE_CHAR_LENGTH-1] = '\0';
+
             playerDetails.device.isActive = device["is_active"].as<bool>();
             playerDetails.device.isPrivateSession = device["is_private_session"].as<bool>();
             playerDetails.device.isRestricted = device["is_restricted"].as<bool>();
@@ -636,7 +641,7 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
 
             playerDetails.shuffleState = doc["shuffle_state"].as<bool>();
 
-            const char *repeat_state = doc["repeat_state"]; // "off"
+            const char *repeat_state = doc["repeat_state"]; 
 
             if (strncmp(repeat_state, "track", 5) == 0)
             {
@@ -923,6 +928,28 @@ void ArduinoSpotify::initStructs()
         currentlyPlaying.albumImages[i].url = (char *)malloc(SPOTIFY_URL_CHAR_LENGTH);
     }
 
+    playerDetails.device.id = (char *)malloc(SPOTIFY_DEVICE_ID_CHAR_LENGTH);
+    playerDetails.device.name = (char *)malloc(SPOTIFY_DEVICE_NAME_CHAR_LENGTH);
+    playerDetails.device.type = (char *)malloc(SPOTIFY_DEVICE_TYPE_CHAR_LENGTH);
+
+}
+
+// Not sure why this would ever be needed, but sure why not.
+void ArduinoSpotify::destroyStructs()
+{
+    free(currentlyPlaying.firstArtistName);
+    free(currentlyPlaying.firstArtistUri);
+    free(currentlyPlaying.albumName);
+    free(currentlyPlaying.albumUri);
+    free(currentlyPlaying.trackName);
+    free(currentlyPlaying.trackUri);
+    for(int i = 0; i < SPOTIFY_NUM_ALBUM_IMAGES; i++){
+        free(currentlyPlaying.albumImages[i].url);
+    }
+
+    free(playerDetails.device.id);
+    free(playerDetails.device.name);
+    free(playerDetails.device.type);
 }
 
 void ArduinoSpotify::closeClient()
