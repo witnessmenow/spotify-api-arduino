@@ -24,6 +24,7 @@ ArduinoSpotify::ArduinoSpotify(Client &client, char *bearerToken)
 {
     this->client = &client;
     sprintf(this->_bearerToken, "Bearer %s", bearerToken);
+    initStructs();
 }
 
 ArduinoSpotify::ArduinoSpotify(Client &client, const char *clientId, const char *clientSecret, const char *refreshToken)
@@ -32,6 +33,7 @@ ArduinoSpotify::ArduinoSpotify(Client &client, const char *clientId, const char 
     this->_clientId = clientId;
     this->_clientSecret = clientSecret;
     this->_refreshToken = refreshToken;
+    initStructs();
 }
 
 int ArduinoSpotify::makeRequestWithBody(const char *type, const char *command, const char *authorization, const char *body, const char *contentType, const char *host)
@@ -907,6 +909,20 @@ void ArduinoSpotify::parseError()
     {
         Serial.print(F("Could not parse error"));
     }
+}
+
+void ArduinoSpotify::initStructs()
+{
+    currentlyPlaying.firstArtistName = (char *)malloc(SPOTIFY_NAME_CHAR_LENGTH);
+    currentlyPlaying.firstArtistUri = (char *)malloc(SPOTIFY_URI_CHAR_LENGTH);
+    currentlyPlaying.albumName = (char *)malloc(SPOTIFY_NAME_CHAR_LENGTH);
+    currentlyPlaying.albumUri = (char *)malloc(SPOTIFY_URI_CHAR_LENGTH);
+    currentlyPlaying.trackName = (char *)malloc(SPOTIFY_NAME_CHAR_LENGTH);
+    currentlyPlaying.trackUri = (char *)malloc(SPOTIFY_URI_CHAR_LENGTH);
+    for(int i = 0; i < SPOTIFY_NUM_ALBUM_IMAGES; i++){
+        currentlyPlaying.albumImages[i].url = (char *)malloc(SPOTIFY_URL_CHAR_LENGTH);
+    }
+
 }
 
 void ArduinoSpotify::closeClient()

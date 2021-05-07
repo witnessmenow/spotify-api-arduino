@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 // NOTE: Do not use this option on live-streams, it will reveal your
 // private tokens!
 
-//#define SPOTIFY_DEBUG 1
+#define SPOTIFY_DEBUG 1
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -72,7 +72,7 @@ struct SpotifyImage
 {
   int height;
   int width;
-  char url[SPOTIFY_URL_CHAR_LENGTH];
+  char *url;
 };
 
 struct SpotifyDevice
@@ -101,12 +101,12 @@ struct PlayerDetails
 
 struct CurrentlyPlaying
 {
-  char firstArtistName[SPOTIFY_NAME_CHAR_LENGTH];
-  char firstArtistUri[SPOTIFY_URI_CHAR_LENGTH];
-  char albumName[SPOTIFY_NAME_CHAR_LENGTH];
-  char albumUri[SPOTIFY_URI_CHAR_LENGTH];
-  char trackName[SPOTIFY_NAME_CHAR_LENGTH];
-  char trackUri[SPOTIFY_URI_CHAR_LENGTH];
+  char *firstArtistName;
+  char *firstArtistUri;
+  char *albumName;
+  char *albumUri;
+  char *trackName;
+  char *trackUri;
   SpotifyImage albumImages[SPOTIFY_NUM_ALBUM_IMAGES];
   int numImages;
   bool isPlaying;
@@ -178,6 +178,7 @@ private:
   void skipHeaders(bool tossUnexpectedForJSON = true);
   void closeClient();
   void parseError();
+  void initStructs();
   const char *requestAccessTokensBody =
       R"(grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s)";
   const char *refreshAccessTokensBody =
