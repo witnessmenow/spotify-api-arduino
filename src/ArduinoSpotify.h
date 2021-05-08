@@ -50,6 +50,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
 
 #define SPOTIFY_PLAYER_ENDPOINT "/v1/me/player"
+#define SPOTIFY_DEVICES_ENDPOINT "/v1/me/player/devices"
 
 #define SPOTIFY_PLAY_ENDPOINT "/v1/me/player/play"
 #define SPOTIFY_PAUSE_ENDPOINT "/v1/me/player/pause"
@@ -143,6 +144,7 @@ public:
   // User methods
   CurrentlyPlaying getCurrentlyPlaying(const char *market = "");
   PlayerDetails getPlayerDetails(const char *market = "");
+  int getDevices(SpotifyDevice* devices, uint8_t maxDevices);
   bool play(const char *deviceId = "");
   bool playAdvanced(char *body, const char *deviceId = "");
   bool pause(const char *deviceId = "");
@@ -160,13 +162,16 @@ public:
   bool getImage(char *imageUrl, uint8_t **image, int *imageLength);
 
   int portNumber = 443;
-  int tagArraySize = 10;
+  uint8_t tagArraySize = 10;
   int currentlyPlayingBufferSize = 3000;
   int playerDetailsBufferSize = 2000;
+  int getDevicesBufferSize = 2000;
   bool autoTokenRefresh = true;
   Client *client;
   void initStructs();
   void destroyStructs();
+  SpotifyDevice* generateDevicesArray(uint8_t size);
+  void destroyDevicesArray(SpotifyDevice* devices, uint8_t size);
 #ifdef SPOTIFY_DEBUG
   char *stack_start;
 #endif
