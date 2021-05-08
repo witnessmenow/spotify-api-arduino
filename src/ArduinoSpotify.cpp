@@ -213,7 +213,7 @@ bool ArduinoSpotify::checkAndRefreshAccessToken()
 const char *ArduinoSpotify::requestAccessTokens(const char *code, const char *redirectUrl)
 {
 
-    char body[400];
+    char body[500];
     sprintf(body, requestAccessTokensBody, code, redirectUrl, _clientId, _clientSecret);
 
 #ifdef SPOTIFY_DEBUG
