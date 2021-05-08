@@ -156,6 +156,7 @@ public:
   bool playerControl(char *command, const char *deviceId = "", const char *body = "");
   bool playerNavigate(char *command, const char *deviceId = "");
   bool seek(int position, const char *deviceId = "");
+  bool transferPlayback(const char *deviceId, bool play = false);
 
   // Image methods
   bool getImage(char *imageUrl, Stream *file);

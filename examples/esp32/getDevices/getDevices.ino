@@ -1,5 +1,6 @@
 /*******************************************************************
     Prints info about the devices currently connected to your spotify account
+    and transfer playback between them.
     (useful for switching between your phone to your PC for example)
 
     NOTE: You need to get a Refresh token to use this example
@@ -171,6 +172,8 @@ void loop() {
     int numDevices = spotify.getDevices(deviceList, SPOTIFY_MAX_DEVICES);
     for (int i = 0; i < numDevices; i++) {
       printDeviceToSerial(deviceList[i]);
+      spotify.transferPlayback(deviceList[i].id, true); //true means to play after transfer
+      delay(5000);
     }
 
     requestDueTime = millis() + delayBetweenRequests;

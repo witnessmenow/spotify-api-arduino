@@ -325,12 +325,12 @@ bool ArduinoSpotify::playerControl(char *command, const char *deviceId, const ch
         char deviceIdBuff[50];
         if (questionMarkPointer == NULL)
         {
-            sprintf(deviceIdBuff, "?deviceId=%s", deviceId);
+            sprintf(deviceIdBuff, "?device_id=%s", deviceId);
         }
         else
         {
             // params already started
-            sprintf(deviceIdBuff, "&deviceId=%s", deviceId);
+            sprintf(deviceIdBuff, "&device_id=%s", deviceId);
         }
         strcat(command, deviceIdBuff);
     }
@@ -356,7 +356,7 @@ bool ArduinoSpotify::playerNavigate(char *command, const char *deviceId)
     if (deviceId[0] != 0)
     {
         char deviceIdBuff[50];
-        sprintf(deviceIdBuff, "?deviceId=%s", deviceId);
+        sprintf(deviceIdBuff, "?device_id=%s", deviceId);
         strcat(command, deviceIdBuff);
     }
 
@@ -394,7 +394,7 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
     strcat(command, tempBuff);
     if (deviceId[0] != 0)
     {
-        sprintf(tempBuff, "?deviceId=%s", deviceId);
+        sprintf(tempBuff, "?device_id=%s", deviceId);
         strcat(command, tempBuff);
     }
 
@@ -408,6 +408,27 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
         checkAndRefreshAccessToken();
     }
     int statusCode = makePutRequest(command, _bearerToken);
+    closeClient();
+    //Will return 204 if all went well.
+    return statusCode == 204;
+}
+
+bool ArduinoSpotify::transferPlayback(const char *deviceId, bool play)
+{
+    char body[100];
+    sprintf(body, "{\"device_ids\":[\"%s\"],\"play\":\"%s\"}", deviceId, (play?"true":"false"));
+
+#ifdef SPOTIFY_DEBUG
+    Serial.println(SPOTIFY_PLAYER_ENDPOINT);
+    Serial.println(body);
+    printStack();
+#endif
+
+    if (autoTokenRefresh)
+    {
+        checkAndRefreshAccessToken();
+    }
+    int statusCode = makePutRequest(SPOTIFY_PLAYER_ENDPOINT, _bearerToken, body);
     closeClient();
     //Will return 204 if all went well.
     return statusCode == 204;
