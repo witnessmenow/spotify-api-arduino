@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 // NOTE: Do not use this option on live-streams, it will reveal your
 // private tokens!
 
-//#define SPOTIFY_DEBUG 1
+#define SPOTIFY_DEBUG 1
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -36,11 +36,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_ACCOUNTS_HOST "accounts.spotify.com"
 // Fingerprint correct as of May 6th, 2021
 #define SPOTIFY_FINGERPRINT "8D 33 E7 61 14 A0 61 EF 6F 5F D5 3C CB 1F C7 6C B8 67 69 BA"
+#define SPOTIFY_IMAGE_SERVER_FINGERPRINT "90 1F 13 F8 97 60 C3 C8 73 2B 80 6F AF C5 E6 8A 3B 95 56 E0" 
 #define SPOTIFY_TIMEOUT 2000
 
 #define SPOTIFY_NAME_CHAR_LENGTH 100 //Increase if artists/song/album names are being cut off
 #define SPOTIFY_URI_CHAR_LENGTH 40
 #define SPOTIFY_URL_CHAR_LENGTH 70
+
+#define SPOTIFY_DEVICE_ID_CHAR_LENGTH 45
+#define SPOTIFY_DEVICE_NAME_CHAR_LENGTH 80
+#define SPOTIFY_DEVICE_TYPE_CHAR_LENGTH 30
 
 #define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
 
@@ -59,7 +64,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
-#define SPOTIFY_NUM_ALBUM_IMAGES 2 // Max spotify returns is 3
+#define SPOTIFY_NUM_ALBUM_IMAGES 2 // Max spotify returns is 3, but the third one is probably too big for an ESP
 
 enum RepeatOptions
 {
@@ -72,7 +77,7 @@ struct SpotifyImage
 {
   int height;
   int width;
-  char url[SPOTIFY_URL_CHAR_LENGTH];
+  char *url;
 };
 
 struct SpotifyDevice
@@ -101,12 +106,12 @@ struct PlayerDetails
 
 struct CurrentlyPlaying
 {
-  char firstArtistName[SPOTIFY_NAME_CHAR_LENGTH];
-  char firstArtistUri[SPOTIFY_URI_CHAR_LENGTH];
-  char albumName[SPOTIFY_NAME_CHAR_LENGTH];
-  char albumUri[SPOTIFY_URI_CHAR_LENGTH];
-  char trackName[SPOTIFY_NAME_CHAR_LENGTH];
-  char trackUri[SPOTIFY_URI_CHAR_LENGTH];
+  char *firstArtistName;
+  char *firstArtistUri;
+  char *albumName;
+  char *albumUri;
+  char *trackName;
+  char *trackUri;
   SpotifyImage albumImages[SPOTIFY_NUM_ALBUM_IMAGES];
   int numImages;
   bool isPlaying;
@@ -160,6 +165,8 @@ public:
   int playerDetailsBufferSize = 2000;
   bool autoTokenRefresh = true;
   Client *client;
+  void initStructs();
+  void destroyStructs();
 #ifdef SPOTIFY_DEBUG
   char *stack_start;
 #endif
@@ -172,6 +179,7 @@ private:
   unsigned int timeTokenRefreshed;
   unsigned int tokenTimeToLiveMs;
   CurrentlyPlaying currentlyPlaying;
+  PlayerDetails playerDetails;
   int commonGetImage(char *imageUrl);
   int getContentLength();
   int getHttpStatusCode();
