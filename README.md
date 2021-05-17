@@ -1,8 +1,8 @@
-# arduino-spotify-api
+# spotify-api-arduino
 
 ![Travis CI status](https://api.travis-ci.org/witnessmenow/arduino-spotify-api.svg?branch=master)
-![License](https://img.shields.io/github/license/witnessmenow/arduino-spotify-api)
-![Release stable](https://badgen.net/github/release/witnessmenow/arduino-spotify-api/stable)  
+![License](https://img.shields.io/github/license/witnessmenow/spotify-api-arduino)
+![Release stable](https://badgen.net/github/release/witnessmenow/spotify-api-arduino/stable)  
 Arduino library for integrating with a subset of the [Spotify Web-API](https://developer.spotify.com/documentation/web-api/reference/) (Does not play music)
 
 **Work in progress library - expect changes!**
@@ -17,18 +17,13 @@ Working well
 
 Working well
 
-```
-#define SPOTIFY_NAME_CHAR_LENGTH 80
+### Arduino Wifi Nina (Nano IOT etc)
 
-
-#define SPOTIFY_NUM_ALBUM_IMAGES 1
-```
-
-The `GetCurrentlyPlaying.ino` example works with this change anyways.
+Unknown, there is an example that has not been tested in a while. If you get it to run feel free to let me know!
 
 ## Help support what I do!
 
-I have created a lot of different Arduino libraries that I hope people can make use of. [If you enjoy my work, please consider becoming a Github sponsor!](https://github.com/sponsors/witnessmenow/)
+I have put a lot of effort into creating Arduino libraries that I hope people can make use of. [If you enjoy my work, please consider becoming a Github sponsor!](https://github.com/sponsors/witnessmenow/)
 
 ## Library Features:
 
@@ -50,8 +45,8 @@ The Library supports the following features:
 
 ### What needs to be added:
 
-- Current play time and song length to currently playing.
-- Save more info on player devices and state.
+- Better instructions for how to set up your refresh token.
+- Example where refresh token and full operation are handled in same sketch.
 
 ## Setup Instructions
 
