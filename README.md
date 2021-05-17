@@ -46,6 +46,7 @@ The Library supports the following features:
   - Set Volume (doesn't seem to work on my phone, works on desktop though)
   - Set Repeat Modes
   - Toggle Shuffle
+- Get Devices
 
 ### What needs to be added:
 

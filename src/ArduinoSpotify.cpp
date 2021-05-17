@@ -325,12 +325,12 @@ bool ArduinoSpotify::playerControl(char *command, const char *deviceId, const ch
         char deviceIdBuff[50];
         if (questionMarkPointer == NULL)
         {
-            sprintf(deviceIdBuff, "?deviceId=%s", deviceId);
+            sprintf(deviceIdBuff, "?device_id=%s", deviceId);
         }
         else
         {
             // params already started
-            sprintf(deviceIdBuff, "&deviceId=%s", deviceId);
+            sprintf(deviceIdBuff, "&device_id=%s", deviceId);
         }
         strcat(command, deviceIdBuff);
     }
@@ -356,7 +356,7 @@ bool ArduinoSpotify::playerNavigate(char *command, const char *deviceId)
     if (deviceId[0] != 0)
     {
         char deviceIdBuff[50];
-        sprintf(deviceIdBuff, "?deviceId=%s", deviceId);
+        sprintf(deviceIdBuff, "?device_id=%s", deviceId);
         strcat(command, deviceIdBuff);
     }
 
@@ -394,7 +394,7 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
     strcat(command, tempBuff);
     if (deviceId[0] != 0)
     {
-        sprintf(tempBuff, "?deviceId=%s", deviceId);
+        sprintf(tempBuff, "?device_id=%s", deviceId);
         strcat(command, tempBuff);
     }
 
@@ -408,6 +408,27 @@ bool ArduinoSpotify::seek(int position, const char *deviceId)
         checkAndRefreshAccessToken();
     }
     int statusCode = makePutRequest(command, _bearerToken);
+    closeClient();
+    //Will return 204 if all went well.
+    return statusCode == 204;
+}
+
+bool ArduinoSpotify::transferPlayback(const char *deviceId, bool play)
+{
+    char body[100];
+    sprintf(body, "{\"device_ids\":[\"%s\"],\"play\":\"%s\"}", deviceId, (play?"true":"false"));
+
+#ifdef SPOTIFY_DEBUG
+    Serial.println(SPOTIFY_PLAYER_ENDPOINT);
+    Serial.println(body);
+    printStack();
+#endif
+
+    if (autoTokenRefresh)
+    {
+        checkAndRefreshAccessToken();
+    }
+    int statusCode = makePutRequest(SPOTIFY_PLAYER_ENDPOINT, _bearerToken, body);
     closeClient();
     //Will return 204 if all went well.
     return statusCode == 204;
@@ -670,6 +691,91 @@ PlayerDetails ArduinoSpotify::getPlayerDetails(const char *market)
     }
     closeClient();
     return playerDetails;
+}
+
+int ArduinoSpotify::getDevices(SpotifyDevice devices[], uint8_t maxDevices)
+{
+
+#ifdef SPOTIFY_DEBUG
+    Serial.println(SPOTIFY_DEVICES_ENDPOINT);
+    printStack();
+#endif
+
+    // Get from https://arduinojson.org/v6/assistant/
+    const size_t bufferSize = getDevicesBufferSize;
+    // This flag will get cleared if all goes well
+    int returnCode = -1;
+    if (autoTokenRefresh)
+    {
+        checkAndRefreshAccessToken();
+    }
+
+    int statusCode = makeGetRequest(SPOTIFY_DEVICES_ENDPOINT, _bearerToken);
+#ifdef SPOTIFY_DEBUG
+    Serial.print("Status Code: ");
+    Serial.println(statusCode);
+#endif
+    if (statusCode > 0)
+    {
+        skipHeaders();
+        playerDetails.statusCode = statusCode;
+    }
+
+    if (statusCode == 200)
+    {
+
+        // Allocate DynamicJsonDocument
+        DynamicJsonDocument doc(bufferSize);
+
+        // Parse JSON object
+        DeserializationError error = deserializeJson(doc, *client);
+        if (!error)
+        {
+            uint8_t devicesToReturn = 0;
+            uint8_t totalDevices = doc["devices"].size();
+            uint8_t startingIndex = 0;
+            if (totalDevices > maxDevices)
+            {
+                startingIndex = totalDevices - maxDevices;
+                devicesToReturn = maxDevices;
+            }
+            else
+            {
+                devicesToReturn = totalDevices;
+            }
+
+            for (int i = 0; i < devicesToReturn; i++)
+            {
+                int adjustedIndex = startingIndex + i;
+                JsonObject device = doc["devices"][adjustedIndex];
+                // Copy into buffer and make the last character a null just incase we went over.
+                strncpy(devices[i].id, (char *)device["id"].as<char *>(), SPOTIFY_DEVICE_ID_CHAR_LENGTH);
+                devices[i].id[SPOTIFY_DEVICE_ID_CHAR_LENGTH-1] = '\0';
+
+                strncpy(devices[i].name, (char *)device["name"].as<char *>(), SPOTIFY_DEVICE_NAME_CHAR_LENGTH);
+                devices[i].name[SPOTIFY_DEVICE_NAME_CHAR_LENGTH-1] = '\0';
+
+                strncpy(devices[i].type, (char *)device["type"].as<char *>(), SPOTIFY_DEVICE_TYPE_CHAR_LENGTH);
+                devices[i].type[SPOTIFY_DEVICE_TYPE_CHAR_LENGTH-1] = '\0';
+
+                devices[i].isActive = device["is_active"].as<bool>();
+                devices[i].isPrivateSession = device["is_private_session"].as<bool>();
+                devices[i].isRestricted = device["is_restricted"].as<bool>();
+                devices[i].volumePrecent = device["volume_percent"].as<int>();
+
+            }
+
+            returnCode = devicesToReturn;
+        }
+        else
+        {
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(error.c_str());
+        }
+    }
+
+    closeClient();
+    return returnCode;
 }
 
 int ArduinoSpotify::commonGetImage(char *imageUrl)
@@ -950,6 +1056,31 @@ void ArduinoSpotify::destroyStructs()
     free(playerDetails.device.id);
     free(playerDetails.device.name);
     free(playerDetails.device.type);
+}
+
+SpotifyDevice* ArduinoSpotify::generateDevicesArray(uint8_t size)
+{
+    SpotifyDevice* devices = (SpotifyDevice*)malloc(sizeof(SpotifyDevice) * size);
+
+    for(int i = 0; i < size; i++){
+        devices[i].id = (char *)malloc(SPOTIFY_DEVICE_ID_CHAR_LENGTH);
+        devices[i].name = (char *)malloc(SPOTIFY_DEVICE_NAME_CHAR_LENGTH);
+        devices[i].type = (char *)malloc(SPOTIFY_DEVICE_TYPE_CHAR_LENGTH);
+    }
+
+    return devices;
+}
+
+void ArduinoSpotify::destroyDevicesArray(SpotifyDevice* devices, uint8_t size)
+{
+
+    for(int i = 0; i < size; i++){
+        free(devices[i].id);
+        free(devices[i].name);
+        free(devices[i].type);
+    }
+
+    free(devices);
 }
 
 void ArduinoSpotify::closeClient()
