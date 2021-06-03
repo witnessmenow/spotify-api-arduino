@@ -89,7 +89,7 @@ struct SpotifyDevice
   bool isActive;
   bool isRestricted;
   bool isPrivateSession;
-  int volumePrecent;
+  int volumePercent;
 };
 
 struct PlayerDetails

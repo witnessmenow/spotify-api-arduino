@@ -144,12 +144,12 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
         Serial.println(duration);
         Serial.println();
 
-        float precentage = ((float)progress / (float)duration) * 100;
-        int clampedPrecentage = (int)precentage;
+        float percentage = ((float)progress / (float)duration) * 100;
+        int clampedPercentage = (int)percentage;
         Serial.print("<");
         for (int j = 0; j < 50; j++)
         {
-            if (clampedPrecentage >= (j * 2))
+            if (clampedPercentage >= (j * 2))
             {
                 Serial.print("=");
             }

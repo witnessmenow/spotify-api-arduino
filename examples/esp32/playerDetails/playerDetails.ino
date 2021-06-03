@@ -141,8 +141,8 @@ void printPlayerDetailsToSerial(PlayerDetails playerDetails)
             Serial.println("No");
         }
 
-        Serial.print("Volume Precent: ");
-        Serial.println(playerDetails.device.volumePrecent);
+        Serial.print("Volume Percent: ");
+        Serial.println(playerDetails.device.volumePercent);
 
         Serial.print("Progress (Ms): ");
         Serial.println(playerDetails.progressMs);
