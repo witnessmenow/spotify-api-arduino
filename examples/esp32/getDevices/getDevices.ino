@@ -155,8 +155,8 @@ void printDeviceToSerial(SpotifyDevice device)
     Serial.println("No");
   }
 
-  Serial.print("Volume Precent: ");
-  Serial.println(device.volumePrecent);
+  Serial.print("Volume Percent: ");
+  Serial.println(device.volumePercent);
 
   Serial.println("------------------------");
 }
