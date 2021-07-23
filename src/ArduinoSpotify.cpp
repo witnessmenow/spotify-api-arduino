@@ -20,8 +20,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #include "ArduinoSpotify.h"
 
-ArduinoSpotify::ArduinoSpotify()
+ArduinoSpotify::ArduinoSpotify(Client &client)
 {
+    this->client = &client;
 }
 
 ArduinoSpotify::ArduinoSpotify(Client &client, char *bearerToken)
@@ -1026,9 +1027,8 @@ void ArduinoSpotify::parseError()
     }
 }
 
-void ArduinoSpotify::lateInit(Client &client, const char *clientId, const char *clientSecret, const char *refreshToken)
+void ArduinoSpotify::lateInit(const char *clientId, const char *clientSecret, const char *refreshToken)
 {
-    this->client = &client;
     this->_clientId = clientId;
     this->_clientSecret = clientSecret;
     this->_refreshToken = refreshToken;
