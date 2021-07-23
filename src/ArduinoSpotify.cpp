@@ -20,6 +20,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #include "ArduinoSpotify.h"
 
+ArduinoSpotify::ArduinoSpotify(Client &client)
+{
+    this->client = &client;
+}
+
 ArduinoSpotify::ArduinoSpotify(Client &client, char *bearerToken)
 {
     this->client = &client;
@@ -1020,6 +1025,14 @@ void ArduinoSpotify::parseError()
     {
         Serial.print(F("Could not parse error"));
     }
+}
+
+void ArduinoSpotify::lateInit(const char *clientId, const char *clientSecret, const char *refreshToken)
+{
+    this->_clientId = clientId;
+    this->_clientSecret = clientSecret;
+    this->_refreshToken = refreshToken;
+    initStructs();
 }
 
 void ArduinoSpotify::initStructs()

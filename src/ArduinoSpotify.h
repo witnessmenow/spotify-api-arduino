@@ -126,6 +126,7 @@ struct CurrentlyPlaying
 class ArduinoSpotify
 {
 public:
+  ArduinoSpotify(Client &client);
   ArduinoSpotify(Client &client, char *bearerToken);
   ArduinoSpotify(Client &client, const char *clientId, const char *clientSecret, const char *refreshToken = "");
 
@@ -169,6 +170,7 @@ public:
   int getDevicesBufferSize = 2000;
   bool autoTokenRefresh = true;
   Client *client;
+  void lateInit(const char *clientId, const char *clientSecret, const char *refreshToken = "");
   void initStructs();
   void destroyStructs();
   SpotifyDevice* generateDevicesArray(uint8_t size);
