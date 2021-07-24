@@ -1,5 +1,5 @@
 /*
-ArduinoSpotify - An Arduino library to wrap the Spotify API
+SpotifyArduino - An Arduino library to wrap the Spotify API
 
 Copyright (c) 2020  Brian Lough.
 
@@ -18,8 +18,8 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#ifndef ArduinoSpotify_h
-#define ArduinoSpotify_h
+#ifndef SpotifyArduino_h
+#define SpotifyArduino_h
 
 // I find setting these types of flags unreliable from the Arduino IDE
 // so uncomment this if its not working for you.
@@ -28,15 +28,25 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_DEBUG 1
 
+// Comment out if you want to disable any serial output from this library (also comment out DEBUG and PRINT_JSON_PARSE)
+#define SPOTIFY_SERIAL_OUTPUT 1
+
+// Prints the JSON received to serial (only use for debugging as it will be slow)
+//#define SPOTIFY_PRINT_JSON_PARSE 1
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Client.h>
+
+#ifdef SPOTIFY_PRINT_JSON_PARSE
+#include <StreamUtils.h>
+#endif
 
 #define SPOTIFY_HOST "api.spotify.com"
 #define SPOTIFY_ACCOUNTS_HOST "accounts.spotify.com"
 // Fingerprint correct as of May 6th, 2021
 #define SPOTIFY_FINGERPRINT "8D 33 E7 61 14 A0 61 EF 6F 5F D5 3C CB 1F C7 6C B8 67 69 BA"
-#define SPOTIFY_IMAGE_SERVER_FINGERPRINT "90 1F 13 F8 97 60 C3 C8 73 2B 80 6F AF C5 E6 8A 3B 95 56 E0" 
+#define SPOTIFY_IMAGE_SERVER_FINGERPRINT "90 1F 13 F8 97 60 C3 C8 73 2B 80 6F AF C5 E6 8A 3B 95 56 E0"
 #define SPOTIFY_TIMEOUT 2000
 
 #define SPOTIFY_NAME_CHAR_LENGTH 100 //Increase if artists/song/album names are being cut off
@@ -65,7 +75,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
-#define SPOTIFY_NUM_ALBUM_IMAGES 2 // Max spotify returns is 3, but the third one is probably too big for an ESP
+#define SPOTIFY_NUM_ALBUM_IMAGES 3 // Max spotify returns is 3, but the third one is probably too big for an ESP
+
+#define SPOTIFY_MAX_NUM_ARTISTS 5
 
 enum RepeatOptions
 {
@@ -78,14 +90,14 @@ struct SpotifyImage
 {
   int height;
   int width;
-  char *url;
+  const char *url;
 };
 
 struct SpotifyDevice
 {
-  char *id;
-  char *name;
-  char *type;
+  const char *id;
+  const char *name;
+  const char *type;
   bool isActive;
   bool isRestricted;
   bool isPrivateSession;
@@ -100,34 +112,38 @@ struct PlayerDetails
   bool isPlaying;
   RepeatOptions repeateState;
   bool shuffleState;
+};
 
-  int statusCode;
-  bool error;
+struct SpotifyArtist
+{
+  const char *artistName;
+  const char *artistUri;
 };
 
 struct CurrentlyPlaying
 {
-  char *firstArtistName;
-  char *firstArtistUri;
-  char *albumName;
-  char *albumUri;
-  char *trackName;
-  char *trackUri;
+  SpotifyArtist artists[SPOTIFY_MAX_NUM_ARTISTS];
+  int numArtists;
+  const char *albumName;
+  const char *albumUri;
+  const char *trackName;
+  const char *trackUri;
   SpotifyImage albumImages[SPOTIFY_NUM_ALBUM_IMAGES];
   int numImages;
   bool isPlaying;
   long progressMs;
-  long duraitonMs;
-
-  int statusCode;
-  bool error;
+  long durationMs;
 };
 
-class ArduinoSpotify
+typedef void (*processCurrentlyPlaying)(CurrentlyPlaying currentlyPlaying);
+typedef void (*processPlayerDetails)(PlayerDetails playerDetails);
+typedef bool (*processDevices)(SpotifyDevice device, int index, int numDevices);
+
+class SpotifyArduino
 {
 public:
-  ArduinoSpotify(Client &client, char *bearerToken);
-  ArduinoSpotify(Client &client, const char *clientId, const char *clientSecret, const char *refreshToken = "");
+  SpotifyArduino(Client &client, char *bearerToken);
+  SpotifyArduino(Client &client, const char *clientId, const char *clientSecret, const char *refreshToken = "");
 
   // Auth Methods
   void setRefreshToken(const char *refreshToken);
@@ -142,9 +158,9 @@ public:
   int makePutRequest(const char *command, const char *authorization, const char *body = "", const char *contentType = "application/json", const char *host = SPOTIFY_HOST);
 
   // User methods
-  CurrentlyPlaying getCurrentlyPlaying(const char *market = "");
-  PlayerDetails getPlayerDetails(const char *market = "");
-  int getDevices(SpotifyDevice* devices, uint8_t maxDevices);
+  int getCurrentlyPlaying(processCurrentlyPlaying currentlyPlayingCallback, const char *market = "");
+  int getPlayerDetails(processPlayerDetails playerDetailsCallback, const char *market = "");
+  int getDevices(processDevices devicesCallback);
   bool play(const char *deviceId = "");
   bool playAdvanced(char *body, const char *deviceId = "");
   bool pause(const char *deviceId = "");
@@ -163,16 +179,12 @@ public:
   bool getImage(char *imageUrl, uint8_t **image, int *imageLength);
 
   int portNumber = 443;
-  uint8_t tagArraySize = 10;
   int currentlyPlayingBufferSize = 3000;
   int playerDetailsBufferSize = 2000;
-  int getDevicesBufferSize = 2000;
+  int getDevicesBufferSize = 3000;
   bool autoTokenRefresh = true;
   Client *client;
-  void initStructs();
-  void destroyStructs();
-  SpotifyDevice* generateDevicesArray(uint8_t size);
-  void destroyDevicesArray(SpotifyDevice* devices, uint8_t size);
+
 #ifdef SPOTIFY_DEBUG
   char *stack_start;
 #endif
@@ -184,8 +196,6 @@ private:
   const char *_clientSecret;
   unsigned int timeTokenRefreshed;
   unsigned int tokenTimeToLiveMs;
-  CurrentlyPlaying currentlyPlaying;
-  PlayerDetails playerDetails;
   int commonGetImage(char *imageUrl);
   int getContentLength();
   int getHttpStatusCode();

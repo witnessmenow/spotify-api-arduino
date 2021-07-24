@@ -1,5 +1,5 @@
 /*******************************************************************
-    Displays Album Art on an 64 x 64 RGB LED Matrix
+    Displays Album Art on an 64 x 64 RGB LED Matrix. ESP32 Only
 
     There is two approaches to this demoed in this example
       - "displayImage" uses a memory buffer, it should be the fastest but possible uses the most memory.
@@ -34,7 +34,6 @@
     Tindie: https://www.tindie.com/stores/brianlough/
     Twitter: https://twitter.com/witnessmenow
  *******************************************************************/
-
 
 // ----------------------------
 // Standard Libraries
@@ -80,14 +79,13 @@
 char ssid[] = "SSID";         // your network SSID (name)
 char password[] = "password"; // your network password
 
-char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify APP
+char clientId[] = "56t4373258u3405u43u543";     // Your client ID of your spotify APP
 char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your spotify APP (Do Not share this!)
 
 // Country code, including this is advisable
 #define SPOTIFY_MARKET "IE"
 
 #define SPOTIFY_REFRESH_TOKEN "AAAAAAAAAABBBBBBBBBBBCCCCCCCCCCCDDDDDDDDDDD"
-
 
 //------- ---------------------- ------
 
@@ -114,10 +112,11 @@ RGB64x32MatrixPanel_I2S_DMA dma_display;
 // This next function will be called during decoding of the jpeg file to
 // render each block to the Matrix.  If you use a different display
 // you will need to adapt this function to suit.
-bool displayOutput(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
+bool displayOutput(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
 {
   // Stop further decoding as image is running off bottom of screen
-  if ( y >= dma_display.height() ) return 0;
+  if (y >= dma_display.height())
+    return 0;
 
   dma_display.drawRGBBitmap(x, y, bitmap, w, h);
 
@@ -125,7 +124,8 @@ bool displayOutput(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitma
   return 1;
 }
 
-void setup() {
+void setup()
+{
 
   Serial.begin(115200);
 
@@ -135,9 +135,11 @@ void setup() {
   // I have found once I used the true flag once, I could use it
   // without the true flag after that.
 
-  if (!SPIFFS.begin()) {
+  if (!SPIFFS.begin())
+  {
     Serial.println("SPIFFS initialisation failed!");
-    while (1) yield(); // Stay here twiddling thumbs waiting
+    while (1)
+      yield(); // Stay here twiddling thumbs waiting
   }
   Serial.println("\r\nInitialisation done.");
 
@@ -158,7 +160,8 @@ void setup() {
   Serial.println("");
 
   // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
@@ -174,24 +177,28 @@ void setup() {
   // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
 
   Serial.println("Refreshing Access Tokens");
-  if (!spotify.refreshAccessToken()) {
+  if (!spotify.refreshAccessToken())
+  {
     Serial.println("Failed to get access tokens");
   }
 }
-int displayImageUsingFile(char *albumArtUrl) {
+int displayImageUsingFile(char *albumArtUrl)
+{
 
   // In this example I reuse the same filename
   // over and over, maybe saving the art using
   // the album URI as the name would be better
   // as you could save having to download them each
   // time, but this seems to work fine.
-  if (SPIFFS.exists(ALBUM_ART) == true) {
+  if (SPIFFS.exists(ALBUM_ART) == true)
+  {
     Serial.println("Removing existing image");
     SPIFFS.remove(ALBUM_ART);
   }
 
   fs::File f = SPIFFS.open(ALBUM_ART, "w+");
-  if (!f) {
+  if (!f)
+  {
     Serial.println("file open failed");
     return -1;
   }
@@ -201,82 +208,92 @@ int displayImageUsingFile(char *albumArtUrl) {
   // Make sure to close the file!
   f.close();
 
-  if (gotImage) {
+  if (gotImage)
+  {
     return TJpgDec.drawFsJpg(0, 0, ALBUM_ART);
-  } else {
+  }
+  else
+  {
     return -2;
   }
 }
 
-int displayImage(char *albumArtUrl) {
+int displayImage(char *albumArtUrl)
+{
 
   uint8_t *imageFile; // pointer that the library will store the image at (uses malloc)
-  int imageSize; // library will update the size of the image
+  int imageSize;      // library will update the size of the image
   bool gotImage = spotify.getImage(albumArtUrl, &imageFile, &imageSize);
 
-  if (gotImage) {
+  if (gotImage)
+  {
     Serial.print("Got Image");
     delay(1);
     int jpegStatus = TJpgDec.drawJpg(0, 0, imageFile, imageSize);
     free(imageFile); // Make sure to free the memory!
     return jpegStatus;
-  } else {
+  }
+  else
+  {
     return -2;
   }
 }
 
 void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
 {
-    if (!currentlyPlaying.error)
+  if (!currentlyPlaying.error)
+  {
+    Serial.println("--------- Currently Playing ---------");
+
+    Serial.print("Is Playing: ");
+    if (currentlyPlaying.isPlaying)
     {
-        Serial.println("--------- Currently Playing ---------");
-
-
-        Serial.print("Is Playing: ");
-        if (currentlyPlaying.isPlaying)
-        {
-        Serial.println("Yes");
-        } else {
-        Serial.println("No");
-        }
-
-        Serial.print("Track: ");
-        Serial.println(currentlyPlaying.trackName);
-        Serial.print("Track URI: ");
-        Serial.println(currentlyPlaying.trackUri);
-        Serial.println();
-
-        Serial.print("Artist: ");
-        Serial.println(currentlyPlaying.firstArtistName);
-        Serial.print("Artist URI: ");
-        Serial.println(currentlyPlaying.firstArtistUri);
-        Serial.println();
-
-        Serial.print("Album: ");
-        Serial.println(currentlyPlaying.albumName);
-        Serial.print("Album URI: ");
-        Serial.println(currentlyPlaying.albumUri);
-        Serial.println();
-
-        // will be in order of widest to narrowest
-        // currentlyPlaying.numImages is the number of images that
-        // are stored 
-        for (int i = 0; i < currentlyPlaying.numImages; i++) {
-            Serial.println("------------------------");
-            Serial.print("Album Image: ");
-            Serial.println(currentlyPlaying.albumImages[i].url);
-            Serial.print("Dimensions: ");
-            Serial.print(currentlyPlaying.albumImages[i].width);
-            Serial.print(" x ");
-            Serial.print(currentlyPlaying.albumImages[i].height);
-            Serial.println();
-        }
-
-        Serial.println("------------------------");
+      Serial.println("Yes");
     }
+    else
+    {
+      Serial.println("No");
+    }
+
+    Serial.print("Track: ");
+    Serial.println(currentlyPlaying.trackName);
+    Serial.print("Track URI: ");
+    Serial.println(currentlyPlaying.trackUri);
+    Serial.println();
+
+    Serial.print("Artist: ");
+    Serial.println(currentlyPlaying.firstArtistName);
+    Serial.print("Artist URI: ");
+    Serial.println(currentlyPlaying.firstArtistUri);
+    Serial.println();
+
+    Serial.print("Album: ");
+    Serial.println(currentlyPlaying.albumName);
+    Serial.print("Album URI: ");
+    Serial.println(currentlyPlaying.albumUri);
+    Serial.println();
+
+    // will be in order of widest to narrowest
+    // currentlyPlaying.numImages is the number of images that
+    // are stored
+    for (int i = 0; i < currentlyPlaying.numImages; i++)
+    {
+      Serial.println("------------------------");
+      Serial.print("Album Image: ");
+      Serial.println(currentlyPlaying.albumImages[i].url);
+      Serial.print("Dimensions: ");
+      Serial.print(currentlyPlaying.albumImages[i].width);
+      Serial.print(" x ");
+      Serial.print(currentlyPlaying.albumImages[i].height);
+      Serial.println();
+    }
+
+    Serial.println("------------------------");
+  }
 }
 
-void loop() {
+void loop()
+{
   if (millis() > requestDueTime)
   {
     Serial.print("Free Heap: ");
@@ -292,13 +309,17 @@ void loop() {
       // Smallest (narrowest) image will always be last.
       SpotifyImage smallestImage = currentlyPlaying.albumImages[currentlyPlaying.numImages - 1];
       String newAlbum = String(smallestImage.url);
-      if (newAlbum != lastAlbumArtUrl) {
+      if (newAlbum != lastAlbumArtUrl)
+      {
         Serial.println("Updating Art");
         //int displayImageResult = displayImageUsingFile(smallestImage.url); File reference example
         int displayImageResult = displayImage(smallestImage.url); // Memory Buffer Example - should be much faster
-        if (displayImageResult == 0) {
+        if (displayImageResult == 0)
+        {
           lastAlbumArtUrl = newAlbum;
-        } else {
+        }
+        else
+        {
           Serial.print("failed to display image: ");
           Serial.println(displayImageResult);
         }
@@ -307,5 +328,4 @@ void loop() {
 
     requestDueTime = millis() + delayBetweenRequests;
   }
-
 }
