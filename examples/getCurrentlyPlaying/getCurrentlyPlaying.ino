@@ -13,7 +13,7 @@
 
  *  * = Affiliate
 
-    If you find what I do usefuland would like to support me,
+    If you find what I do useful and would like to support me,
     please consider becoming a sponsor on Github
     https://github.com/sponsors/witnessmenow/
 
@@ -150,10 +150,6 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
         Serial.println(currentlyPlaying.artists[i].artistUri);
         Serial.println();
     }
-    Serial.println(currentlyPlaying.firstArtistName);
-    Serial.print("Artist URI: ");
-    Serial.println(currentlyPlaying.firstArtistUri);
-    Serial.println();
 
     Serial.print("Album: ");
     Serial.println(currentlyPlaying.albumName);

@@ -11,12 +11,15 @@
     NOTE: You need to get a Refresh token to use this example
     Use the getRefreshToken example to get it.
 
+    Compatible Boards:
+	  - Any ESP8266 or ESP32 board
+
     Parts:
-    ESP32 D1 Mini stlye Dev board* - http://s.click.aliexpress.com/e/C6ds4my
+    ESP32 D1 Mini style Dev board* - http://s.click.aliexpress.com/e/C6ds4my
 
- *  * = Affilate
+ *  * = Affiliate
 
-    If you find what I do usefuland would like to support me,
+    If you find what I do useful and would like to support me,
     please consider becoming a sponsor on Github
     https://github.com/sponsors/witnessmenow/
 
@@ -27,23 +30,31 @@
     Twitter: https://twitter.com/witnessmenow
  *******************************************************************/
 
-
 // ----------------------------
 // Standard Libraries
 // ----------------------------
 
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
+#elif defined(ESP32)
 #include <WiFi.h>
+#endif
+
 #include <WiFiClientSecure.h>
 
 // ----------------------------
 // Additional Libraries - each one of these will need to be installed.
 // ----------------------------
 
-#include <ArduinoSpotify.h>
+#include <SpotifyArduino.h>
 // Library for connecting to the Spotify API
 
 // Install from Github
-// https://github.com/witnessmenow/arduino-spotify-api
+// https://github.com/witnessmenow/spotify-api-arduino
+
+// including a "spotify_server_cert" variable
+// header is included as part of the SpotifyArduino libary
+#include <SpotifyArduinoCert.h>
 
 #include <ArduinoJson.h>
 // Library used for parsing Json from the API responses
@@ -56,52 +67,58 @@
 char ssid[] = "SSID";         // your network SSID (name)
 char password[] = "password"; // your network password
 
-char clientId[] = "56t4373258u3405u43u543"; // Your client ID of your spotify APP
+char clientId[] = "56t4373258u3405u43u543";     // Your client ID of your spotify APP
 char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your spotify APP (Do Not share this!)
+
+// Country code, including this is advisable
+#define SPOTIFY_MARKET "IE"
 
 #define SPOTIFY_REFRESH_TOKEN "AAAAAAAAAABBBBBBBBBBBCCCCCCCCCCCDDDDDDDDDDD"
 
 //------- ---------------------- ------
 
-// including a "spotify_server_cert" variable
-// header is included as part of the ArduinoSpotify libary
-#include <ArduinoSpotifyCert.h>
-
 WiFiClientSecure client;
-ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
+SpotifyArduino spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
 
-void playSingleTrack(){
+void playSingleTrack()
+{
     char sampleTrack[] = "spotify:track:4uLU6hMCjMI75M1A2tKUQC";
     char body[100];
     sprintf(body, "{\"uris\" : [\"%s\"]}", sampleTrack);
-    if (spotify.playAdvanced(body)) {
+    if (spotify.playAdvanced(body))
+    {
         Serial.println("sent!");
     }
 }
 
-void playMultipleTracks(){
+void playMultipleTracks()
+{
     char sampleTrack1[] = "spotify:track:6vW1WpedCmV4gtOijSoQV3";
     char sampleTrack2[] = "spotify:track:4dJYjR2lM6SmYfLw2mnHvb";
     char sampleTrack3[] = "spotify:track:4uLU6hMCjMI75M1A2tKUQC";
 
     char body[200];
     sprintf(body, "{\"uris\" : [\"%s\", \"%s\", \"%s\"]}", sampleTrack1, sampleTrack2, sampleTrack3);
-    if (spotify.playAdvanced(body)) {
+    if (spotify.playAdvanced(body))
+    {
         Serial.println("sent!");
     }
 }
 
-void playAlbum(){
+void playAlbum()
+{
     char sampleAlbum[] = "spotify:album:6N9PS4QXF1D0OWPk0Sxtb4";
 
     char body[100];
     sprintf(body, "{\"context_uri\" : \"%s\"}", sampleAlbum);
-    if (spotify.playAdvanced(body)) {
+    if (spotify.playAdvanced(body))
+    {
         Serial.println("sent!");
     }
 }
 
-void specifyTrackNumOfAlbum(){
+void specifyTrackNumOfAlbum()
+{
     char sampleAlbum[] = "spotify:album:2fPcSpVFVo1dXEvarNoFkB";
     // The position has an index of 0, so passing in 2
     // like this will actually play the 3rd song.
@@ -109,43 +126,51 @@ void specifyTrackNumOfAlbum(){
 
     char body[200];
     sprintf(body, "{\"context_uri\" : \"%s\", \"offset\": {\"position\": %d}}", sampleAlbum, trackNum);
-    if (spotify.playAdvanced(body)) {
+    if (spotify.playAdvanced(body))
+    {
         Serial.println("sent!");
     }
 }
 
-void specifyTrackOfAlbum(){
+void specifyTrackOfAlbum()
+{
     char sampleAlbum[] = "spotify:album:2BLjT6yzDdKojUyc3Gi6y2";
     char trackOnAlbum[] = "spotify:track:25IZtuJS77yXPCXMhPa1ze";
 
     char body[200];
     sprintf(body, "{\"context_uri\" : \"%s\", \"offset\": {\"uri\": \"%s\"}}", sampleAlbum, trackOnAlbum);
-    if (spotify.playAdvanced(body)) {
+    if (spotify.playAdvanced(body))
+    {
         Serial.println("sent!");
     }
 }
 
-void playArtist(){
+void playArtist()
+{
     char sampleArtist[] = "spotify:artist:0gxyHStUsqpMadRV0Di1Qt";
 
     char body[100];
     sprintf(body, "{\"context_uri\" : \"%s\"}", sampleArtist);
-    if (spotify.playAdvanced(body)) {
+    if (spotify.playAdvanced(body))
+    {
         Serial.println("sent!");
     }
 }
 
-void playPlaylist(){
+void playPlaylist()
+{
     char samplePlaylist[] = "spotify:playlist:37i9dQZF1DZ06evO05tE88";
 
     char body[100];
     sprintf(body, "{\"context_uri\" : \"%s\"}", samplePlaylist);
-    if (spotify.playAdvanced(body)) {
+    if (spotify.playAdvanced(body))
+    {
         Serial.println("sent!");
     }
 }
 
-void specifyTrackNumOfPlaylist(){
+void specifyTrackNumOfPlaylist()
+{
     char samplePlaylist[] = "spotify:playlist:37i9dQZF1DZ06evO05tE88";
     // The position has an index of 0, so passing in 31
     // like this will actually play the 32nd song.
@@ -153,25 +178,29 @@ void specifyTrackNumOfPlaylist(){
 
     char body[200];
     sprintf(body, "{\"context_uri\" : \"%s\", \"offset\": {\"position\": %d}}", samplePlaylist, playlistTrackNum);
-    if (spotify.playAdvanced(body)) {
+    if (spotify.playAdvanced(body))
+    {
         Serial.println("sent!");
     }
 }
 
-void specifyTrackOfPlaylist(){
+void specifyTrackOfPlaylist()
+{
     char samplePlaylist[] = "spotify:playlist:37i9dQZF1DZ06evO05tE88";
     char trackOnPlaylist[] = "spotify:track:6vW1WpedCmV4gtOijSoQV3";
 
     char body[200];
     sprintf(body, "{\"context_uri\" : \"%s\", \"offset\": {\"uri\": \"%s\"}}", samplePlaylist, trackOnPlaylist);
-    if (spotify.playAdvanced(body)) {
+    if (spotify.playAdvanced(body))
+    {
         Serial.println("sent!");
     }
 }
 
-void setup() {
+void setup()
+{
 
-  Serial.begin(115200);
+    Serial.begin(115200);
 
     // Set WiFi to station mode and disconnect from an AP if it was Previously
     // connected
@@ -194,13 +223,21 @@ void setup() {
     IPAddress ip = WiFi.localIP();
     Serial.println(ip);
 
+    // Handle HTTPS Verification
+#if defined(ESP8266)
+    client.setFingerprint(SPOTIFY_FINGERPRINT); // These expire every few months
+#elif defined(ESP32)
     client.setCACert(spotify_server_cert);
+#endif
+    // ... or don't!
+    //client.setInsecure();
 
     // If you want to enable some extra debugging
     // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
 
     Serial.println("Refreshing Access Tokens");
-    if(!spotify.refreshAccessToken()){
+    if (!spotify.refreshAccessToken())
+    {
         Serial.println("Failed to get access tokens");
         return;
     }
@@ -232,11 +269,9 @@ void setup() {
     delay(10000);
     Serial.println("Playing specific track on Playlist");
     specifyTrackOfPlaylist();
-
 }
 
-
 // Example code is at end of setup
-void loop() {
-  
+void loop()
+{
 }
