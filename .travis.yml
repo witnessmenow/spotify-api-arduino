@@ -9,22 +9,21 @@ cache:
 
 env:
   # ESP8266
-  - SCRIPT=platformioSingle EXAMPLE_NAME=getCurrentlyPlaying EXAMPLE_FOLDER=/ BOARDTYPE=esp8266 BOARD=d1_mini
-  - SCRIPT=platformioSingle EXAMPLE_NAME=getRefreshToken EXAMPLE_FOLDER=/ BOARDTYPE=esp8266 BOARD=d1_mini
-  - SCRIPT=platformioSingle EXAMPLE_NAME=playerControls EXAMPLE_FOLDER=/ BOARDTYPE=esp8266 BOARD=d1_mini
+  - SCRIPT=platformioSingle EXAMPLE_NAME=getCurrentlyPlaying EXAMPLE_FOLDER=/ BOARD=d1_mini
+  - SCRIPT=platformioSingle EXAMPLE_NAME=getRefreshToken EXAMPLE_FOLDER=/ BOARD=d1_mini
+  - SCRIPT=platformioSingle EXAMPLE_NAME=playAdvanced EXAMPLE_FOLDER=/ BOARD=d1_mini
+  - SCRIPT=platformioSingle EXAMPLE_NAME=playerControls EXAMPLE_FOLDER=/ BOARD=d1_mini
+  - SCRIPT=platformioSingle EXAMPLE_NAME=playerDetails EXAMPLE_FOLDER=/ BOARD=d1_mini
+  - SCRIPT=platformioSingle EXAMPLE_NAME=getDevices EXAMPLE_FOLDER=/ BOARD=d1_mini
 
   # ESP32
   # - SCRIPT=platformioSingle EXAMPLE_NAME=albumArtMatrix EXAMPLE_FOLDER=/displayAlbumArt/ BOARDTYPE=ESP32 BOARD=esp32dev
-  - SCRIPT=platformioSingle EXAMPLE_NAME=getCurrentlyPlaying EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
-  - SCRIPT=platformioSingle EXAMPLE_NAME=getRefreshToken EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
-  - SCRIPT=platformioSingle EXAMPLE_NAME=playAdvanced EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
-  - SCRIPT=platformioSingle EXAMPLE_NAME=playerControls EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
-  - SCRIPT=platformioSingle EXAMPLE_NAME=playerDetails EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
-  - SCRIPT=platformioSingle EXAMPLE_NAME=getDevices EXAMPLE_FOLDER=/ BOARDTYPE=esp32 BOARD=esp32dev
-
-  # WifiNINA
-  #- SCRIPT=platformioSingle EXAMPLE_NAME=getCurrentlyPlaying EXAMPLE_FOLDER=/ BOARDTYPE=WifiNINA BOARD=nano_33_iot
-  #- SCRIPT=platformioSingle EXAMPLE_NAME=playerControls EXAMPLE_FOLDER=/ BOARDTYPE=WifiNINA BOARD=nano_33_iot
+  - SCRIPT=platformioSingle EXAMPLE_NAME=getCurrentlyPlaying EXAMPLE_FOLDER=/ BOARD=esp32dev
+  - SCRIPT=platformioSingle EXAMPLE_NAME=getRefreshToken EXAMPLE_FOLDER=/ BOARD=esp32dev
+  - SCRIPT=platformioSingle EXAMPLE_NAME=playAdvanced EXAMPLE_FOLDER=/ BOARD=esp32dev
+  - SCRIPT=platformioSingle EXAMPLE_NAME=playerControls EXAMPLE_FOLDER=/ BOARD=esp32dev
+  - SCRIPT=platformioSingle EXAMPLE_NAME=playerDetails EXAMPLE_FOLDER=/ BOARD=esp32dev
+  - SCRIPT=platformioSingle EXAMPLE_NAME=getDevices EXAMPLE_FOLDER=/ BOARD=esp32dev
 
 before_install:
 
