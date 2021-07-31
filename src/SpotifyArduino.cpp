@@ -184,7 +184,14 @@ bool SpotifyArduino::refreshAccessToken()
     if (statusCode == 200)
     {
         DynamicJsonDocument doc(1000);
+
+        // Parse JSON object
+#ifndef SPOTIFY_PRINT_JSON_PARSE
         DeserializationError error = deserializeJson(doc, *client);
+#else
+        ReadLoggingStream loggingStream(*client, Serial);
+        DeserializationError error = deserializeJson(doc, loggingStream);
+#endif
         if (!error)
         {
             sprintf(this->_bearerToken, "Bearer %s", doc["access_token"].as<const char *>());
@@ -192,6 +199,13 @@ bool SpotifyArduino::refreshAccessToken()
             tokenTimeToLiveMs = (tokenTtl * 1000) - 2000; // The 2000 is just to force the token expiry to check if its very close
             timeTokenRefreshed = now;
             refreshed = true;
+        }
+        else
+        {
+#ifdef SPOTIFY_SERIAL_OUTPUT
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(error.c_str());
+#endif
         }
     }
     else
@@ -243,7 +257,13 @@ const char *SpotifyArduino::requestAccessTokens(const char *code, const char *re
     if (statusCode == 200)
     {
         DynamicJsonDocument doc(1000);
+        // Parse JSON object
+#ifndef SPOTIFY_PRINT_JSON_PARSE
         DeserializationError error = deserializeJson(doc, *client);
+#else
+        ReadLoggingStream loggingStream(*client, Serial);
+        DeserializationError error = deserializeJson(doc, loggingStream);
+#endif
         if (!error)
         {
             sprintf(this->_bearerToken, "Bearer %s", doc["access_token"].as<const char *>());
@@ -251,6 +271,13 @@ const char *SpotifyArduino::requestAccessTokens(const char *code, const char *re
             int tokenTtl = doc["expires_in"];             // Usually 3600 (1 hour)
             tokenTimeToLiveMs = (tokenTtl * 1000) - 2000; // The 2000 is just to force the token expiry to check if its very close
             timeTokenRefreshed = now;
+        }
+        else
+        {
+#ifdef SPOTIFY_SERIAL_OUTPUT
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(error.c_str());
+#endif
         }
     }
     else
