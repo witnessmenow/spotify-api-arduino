@@ -1074,14 +1074,14 @@ void SpotifyArduino::parseError()
 #endif
 }
 
-void ArduinoSpotify::lateInit(const char *clientId, const char *clientSecret, const char *refreshToken)
+void SpotifyArduino::lateInit(const char *clientId, const char *clientSecret, const char *refreshToken)
 {
     this->_clientId = clientId;
     this->_clientSecret = clientSecret;
     this->_refreshToken = refreshToken;
 }
 
-void ArduinoSpotify::closeClient()
+void SpotifyArduino::closeClient()
 {
     if (client->connected())
     {
