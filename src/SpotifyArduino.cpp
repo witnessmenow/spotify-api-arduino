@@ -20,6 +20,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #include "SpotifyArduino.h"
 
+SpotifyArduino::SpotifyArduino(Client &client)
+{
+    this->client = &client;
+}
+
 SpotifyArduino::SpotifyArduino(Client &client, char *bearerToken)
 {
     this->client = &client;
@@ -1069,7 +1074,14 @@ void SpotifyArduino::parseError()
 #endif
 }
 
-void SpotifyArduino::closeClient()
+void ArduinoSpotify::lateInit(const char *clientId, const char *clientSecret, const char *refreshToken)
+{
+    this->_clientId = clientId;
+    this->_clientSecret = clientSecret;
+    this->_refreshToken = refreshToken;
+}
+
+void ArduinoSpotify::closeClient()
 {
     if (client->connected())
     {

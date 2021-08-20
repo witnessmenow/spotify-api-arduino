@@ -142,6 +142,7 @@ typedef bool (*processDevices)(SpotifyDevice device, int index, int numDevices);
 class SpotifyArduino
 {
 public:
+  SpotifyArduino(Client &client);
   SpotifyArduino(Client &client, char *bearerToken);
   SpotifyArduino(Client &client, const char *clientId, const char *clientSecret, const char *refreshToken = "");
 
@@ -184,6 +185,7 @@ public:
   int getDevicesBufferSize = 3000;
   bool autoTokenRefresh = true;
   Client *client;
+  void lateInit(const char *clientId, const char *clientSecret, const char *refreshToken = "");
 
 #ifdef SPOTIFY_DEBUG
   char *stack_start;
