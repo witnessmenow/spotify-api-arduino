@@ -93,3 +93,24 @@ Download zip from Github and install to the Arduino IDE using that.
 #### Dependancies
 
 - V6 of Arduino JSON - can be installed through the Arduino Library manager.
+
+## Compile flag configuration
+
+There are some flags that you can set in the `SpotifyArduino.h` that can help with debugging
+
+```
+
+#define SPOTIFY_DEBUG 1
+// Enables extra debug messages on the serial.
+// Will be disabled by default when library is released.
+// NOTE: Do not use this option on live-streams, it will reveal your private tokens!
+
+#define SPOTIFY_SERIAL_OUTPUT 1
+// Comment out if you want to disable any serial output from this library
+// (also comment out DEBUG and PRINT_JSON_PARSE)
+
+//#define SPOTIFY_PRINT_JSON_PARSE 1
+// Prints the JSON received to serial (only use for debugging as it will be slow)
+// Requires the installation of ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils)
+
+```

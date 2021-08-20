@@ -1,6 +1,6 @@
 {
-  "name":"SpotifyAPIArduino",
-  "description":"A library to wrap the Spotify API (supports ESP8266/ESP32 & others)",
+  "name":"SpotifyArduino",
+  "description":"A library to wrap the Spotify API (supports ESP8266/ESP32 & probably others)",
   "keywords":"Spotify,Music,Arduino",
   "authors":
   {
@@ -18,7 +18,7 @@
   "platforms": "*",
   "dependencies": [
     {
-      "name": "ArduinoJson"
+      "name": "bblanchon/ArduinoJson"
     }
   ],
   "build": {
