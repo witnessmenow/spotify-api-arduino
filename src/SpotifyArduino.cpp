@@ -188,22 +188,27 @@ bool SpotifyArduino::refreshAccessToken()
     bool refreshed = false;
     if (statusCode == 200)
     {
+        Serial.println("Inside statusCode == 200");
         DynamicJsonDocument doc(1000);
-
+        Serial.println("Allocated Json");
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
         DeserializationError error = deserializeJson(doc, *client);
+        Serial.println("Should not be here");
 #else
         ReadLoggingStream loggingStream(*client, Serial);
         DeserializationError error = deserializeJson(doc, loggingStream);
+        Serial.println("Finished JSON deserilaize");
 #endif
         if (!error)
         {
+            Serial.println("No error");
             sprintf(this->_bearerToken, "Bearer %s", doc["access_token"].as<const char *>());
             int tokenTtl = doc["expires_in"];             // Usually 3600 (1 hour)
             tokenTimeToLiveMs = (tokenTtl * 1000) - 2000; // The 2000 is just to force the token expiry to check if its very close
             timeTokenRefreshed = now;
             refreshed = true;
+            Serial.println("End of no error");
         }
         else
         {
@@ -217,6 +222,8 @@ bool SpotifyArduino::refreshAccessToken()
     {
         parseError();
     }
+
+    Serial.println("Before Close client");
 
     closeClient();
     return refreshed;
@@ -1083,6 +1090,7 @@ void SpotifyArduino::lateInit(const char *clientId, const char *clientSecret, co
 
 void SpotifyArduino::closeClient()
 {
+    Serial.println("In Close client");
     if (client->connected())
     {
 #ifdef SPOTIFY_DEBUG
