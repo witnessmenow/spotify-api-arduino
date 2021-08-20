@@ -17,9 +17,9 @@ Working well
 
 Working well
 
-### Arduino Wifi Nina (Nano IOT etc)
+### Other boards - Arduino Wifi Nina (Nano IOT etc)
 
-Unknown, there is an example that has not been tested in a while. If you get it to run feel free to let me know!
+Should in theory work, but I have no tested it on them and will not be able to provide support for them.
 
 ## Help support what I do!
 
@@ -61,13 +61,9 @@ The Library supports the following features:
 
 Spotify's Authentication flow requires a webserver to complete, but it's only needed once to get your refresh token. Your refresh token can then be used in all future sketches to authenticate.
 
-Because the webserver is only needed once, I decided to seperate the logic for getting the Refresh token to it's own examples.
+Because the webserver is only needed once, I decided to seperate the logic for getting the Refresh token to it's own example.
 
-Follow the instructions in one of the following examples to get your token.
-
-- [ESP8266](examples/esp8266/getRefreshToken/getRefreshToken.ino)
-- [ESP32](examples/esp32/getRefreshToken/getRefreshToken.ino)
-- WiFiNINA (Nano 33 IOT) - [Help needed to create an example](https://github.com/witnessmenow/arduino-spotify-api/issues/2)
+Follow the instructions in the [getRefreshToken example](examples/getRefreshToken/getRefreshToken.ino) to get your token.
 
 Note: Once you have a refresh token, you can use it on either platform in your sketches, it is not tied to any particular device.
 
