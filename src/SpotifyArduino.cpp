@@ -188,16 +188,21 @@ bool SpotifyArduino::refreshAccessToken()
     bool refreshed = false;
     if (statusCode == 200)
     {
+        StaticJsonDocument<48> filter;
+        filter["access_token"] = true;
+        filter["token_type"] = true;
+        filter["expires_in"] = true;
+
         Serial.println("Inside statusCode == 200");
-        DynamicJsonDocument doc(1000);
+        DynamicJsonDocument doc(512);
         Serial.println("Allocated Json");
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
-        DeserializationError error = deserializeJson(doc, *client);
+        DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
         Serial.println("Should not be here");
 #else
         ReadLoggingStream loggingStream(*client, Serial);
-        DeserializationError error = deserializeJson(doc, loggingStream);
+        DeserializationError error = deserializeJson(doc, loggingStream, DeserializationOption::Filter(filter));
         Serial.println("Finished JSON deserilaize");
 #endif
         if (!error)

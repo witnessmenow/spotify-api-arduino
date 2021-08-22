@@ -192,7 +192,7 @@ public:
 #endif
 
 private:
-  char _bearerToken[200];
+  char _bearerToken[320];
   const char *_refreshToken;
   const char *_clientId;
   const char *_clientSecret;
