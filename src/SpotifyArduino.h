@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_SERIAL_OUTPUT 1
 
 // Prints the JSON received to serial (only use for debugging as it will be slow)
-#define SPOTIFY_PRINT_JSON_PARSE 1
+//#define SPOTIFY_PRINT_JSON_PARSE 1
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -78,6 +78,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_NUM_ALBUM_IMAGES 3 // Max spotify returns is 3, but the third one is probably too big for an ESP
 
 #define SPOTIFY_MAX_NUM_ARTISTS 5
+
+#define SPOTIFY_ACCESS_TOKEN_LENGTH 309
 
 enum RepeatOptions
 {
@@ -192,7 +194,7 @@ public:
 #endif
 
 private:
-  char _bearerToken[320];
+  char _bearerToken[SPOTIFY_ACCESS_TOKEN_LENGTH + 10]; //10 extra is for "bearer " at the start
   const char *_refreshToken;
   const char *_clientId;
   const char *_clientSecret;
