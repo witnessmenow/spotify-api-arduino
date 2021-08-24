@@ -188,22 +188,41 @@ bool SpotifyArduino::refreshAccessToken()
     bool refreshed = false;
     if (statusCode == 200)
     {
-        DynamicJsonDocument doc(1000);
+        StaticJsonDocument<48> filter;
+        filter["access_token"] = true;
+        filter["token_type"] = true;
+        filter["expires_in"] = true;
+
+        DynamicJsonDocument doc(512);
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
-        DeserializationError error = deserializeJson(doc, *client);
+        DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
 #else
         ReadLoggingStream loggingStream(*client, Serial);
-        DeserializationError error = deserializeJson(doc, loggingStream);
+        DeserializationError error = deserializeJson(doc, loggingStream, DeserializationOption::Filter(filter));
 #endif
         if (!error)
         {
-            sprintf(this->_bearerToken, "Bearer %s", doc["access_token"].as<const char *>());
-            int tokenTtl = doc["expires_in"];             // Usually 3600 (1 hour)
-            tokenTimeToLiveMs = (tokenTtl * 1000) - 2000; // The 2000 is just to force the token expiry to check if its very close
-            timeTokenRefreshed = now;
-            refreshed = true;
+#ifdef SPOTIFY_DEBUG
+            Serial.println(F("No JSON error, dealing with response"));
+#endif
+            const char *accessToken = doc["access_token"].as<const char *>();
+            if (accessToken != NULL && (SPOTIFY_ACCESS_TOKEN_LENGTH >= strlen(accessToken)))
+            {
+                sprintf(this->_bearerToken, "Bearer %s", accessToken);
+                int tokenTtl = doc["expires_in"];             // Usually 3600 (1 hour)
+                tokenTimeToLiveMs = (tokenTtl * 1000) - 2000; // The 2000 is just to force the token expiry to check if its very close
+                timeTokenRefreshed = now;
+                refreshed = true;
+            }
+            else
+            {
+#ifdef SPOTIFY_SERIAL_OUTPUT
+                Serial.print(F("Problem with access_token (too long or null): "));
+                Serial.println(accessToken);
+#endif
+            }
         }
         else
         {

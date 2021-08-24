@@ -79,6 +79,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_MAX_NUM_ARTISTS 5
 
+#define SPOTIFY_ACCESS_TOKEN_LENGTH 309
+
 enum RepeatOptions
 {
   repeat_track,
@@ -192,7 +194,7 @@ public:
 #endif
 
 private:
-  char _bearerToken[200];
+  char _bearerToken[SPOTIFY_ACCESS_TOKEN_LENGTH + 10]; //10 extra is for "bearer " at the start
   const char *_refreshToken;
   const char *_clientId;
   const char *_clientSecret;
