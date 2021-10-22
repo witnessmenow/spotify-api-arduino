@@ -108,7 +108,7 @@ void setup()
     //client.setInsecure();
 
     // If you want to enable some extra debugging
-    // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
+    // uncomment the "#define SPOTIFY_DEBUG" in SpotifyArduino.h
 
     Serial.println("Refreshing Access Tokens");
     if (!spotify.refreshAccessToken())

@@ -56,7 +56,7 @@
 // Can be installed from the library manager (Search for "ESP32 64x32 LED MATRIX")
 // https://github.com/mrfaptastic/ESP32-RGB64x32MatrixPanel-I2S-DMA
 
-#include <ArduinoSpotify.h>
+#include <SpotifyArduino.h>
 // Library for connecting to the Spotify API
 
 // Install from Github
@@ -90,8 +90,8 @@ char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your sp
 //------- ---------------------- ------
 
 // including a "spotify_server_cert" variable
-// header is included as part of the ArduinoSpotify libary
-#include <ArduinoSpotifyCert.h>
+// header is included as part of the SpotifyArduino libary
+#include <SpotifyArduinoCert.h>
 
 // file name for where to save the image.
 #define ALBUM_ART "/album.jpg"
@@ -100,7 +100,7 @@ char clientSecret[] = "56t4373258u3405u43u543"; // Your client Secret of your sp
 String lastAlbumArtUrl;
 
 WiFiClientSecure client;
-ArduinoSpotify spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
+SpotifyArduino spotify(client, clientId, clientSecret, SPOTIFY_REFRESH_TOKEN);
 
 // You might want to make this much smaller, so it will update responsively
 
@@ -174,7 +174,7 @@ void setup()
   client.setCACert(spotify_server_cert);
 
   // If you want to enable some extra debugging
-  // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
+  // uncomment the "#define SPOTIFY_DEBUG" in SpotifyArduino.h
 
   Serial.println("Refreshing Access Tokens");
   if (!spotify.refreshAccessToken())
@@ -241,7 +241,7 @@ int displayImage(char *albumArtUrl)
 
 void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
 {
-  if (!currentlyPlaying.error)
+  if (currentlyPlaying.isPlaying)  // was: if (!currentlyPlaying.error) which causes a compiler error 'struct CurrentlyPlaying' has no member named 'error'
   {
     Serial.println("--------- Currently Playing ---------");
 
@@ -262,9 +262,9 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
     Serial.println();
 
     Serial.print("Artist: ");
-    Serial.println(currentlyPlaying.firstArtistName);
+    Serial.println(SpotifyArtist.artistName);
     Serial.print("Artist URI: ");
-    Serial.println(currentlyPlaying.firstArtistUri);
+    Serial.println(SpotifyArtist.artistUri);
     Serial.println();
 
     Serial.print("Album: ");
@@ -301,8 +301,8 @@ void loop()
 
     Serial.println("getting currently playing song:");
     // Market can be excluded if you want e.g. spotify.getCurrentlyPlaying()
-    CurrentlyPlaying currentlyPlaying = spotify.getCurrentlyPlaying(SPOTIFY_MARKET);
-    if (!currentlyPlaying.error)
+    int currentlyPlayingNr = spotify.getCurrentlyPlaying(SPOTIFY_MARKET);
+    if (currentlyPlayingNr >= 0){  // was: if (!currentlyPlaying.error) which causes a compiler error 'struct CurrentlyPlaying' has no member named 'error'
     {
       printCurrentlyPlayingToSerial(currentlyPlaying);
 
@@ -313,7 +313,9 @@ void loop()
       {
         Serial.println("Updating Art");
         //int displayImageResult = displayImageUsingFile(smallestImage.url); File reference example
-        int displayImageResult = displayImage(smallestImage.url); // Memory Buffer Example - should be much faster
+        char* my_url = const_cast<char*>(smallestImage.url);  // Modification by @paulsk 2021-10-20
+        // convert from const char* to char* // see: https://stackoverflow.com/questions/833034/how-to-convert-const-char-to-char
+        int displayImageResult = displayImage(my_url);  // was: int displayImageResult =displayImage(smallestImage.url); // Memory Buffer Example - should be much faster
         if (displayImageResult == 0)
         {
           lastAlbumArtUrl = newAlbum;

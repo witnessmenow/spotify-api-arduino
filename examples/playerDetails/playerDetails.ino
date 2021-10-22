@@ -108,7 +108,7 @@ void setup()
     //client.setInsecure();
 
     // If you want to enable some extra debugging
-    // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
+    // uncomment the "#define SPOTIFY_DEBUG" in SpotifyArduino.h
 
     Serial.println("Refreshing Access Tokens");
     if (!spotify.refreshAccessToken())
@@ -119,7 +119,8 @@ void setup()
 
 void printPlayerDetailsToSerial(PlayerDetails playerDetails)
 {
-    if (!playerDetails.error)
+    int len = sizeof(playerDetails.device.id)/sizeof(playerDetails.device.id[0]);  // modification by @paulsk 2021-10-22
+    if (len > 0)  // was: (!playerDetails.error)
     {
         Serial.println("--------- Player Details ---------");
 
