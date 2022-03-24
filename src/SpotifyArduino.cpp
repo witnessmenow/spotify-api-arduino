@@ -825,6 +825,83 @@ int SpotifyArduino::getDevices(processDevices devicesCallback)
     return statusCode;
 }
 
+int SpotifyArduino::searchForSong(String query, int limit, processSearch searchCallback, SearchResult results[])
+{
+
+#ifdef SPOTIFY_DEBUG
+    Serial.println(SPOTIFY_SEARCH_ENDPOINT);
+    printStack();
+#endif
+
+    // Get from https://arduinojson.org/v6/assistant/
+    const size_t bufferSize = searchDetailsBufferSize;
+    if (autoTokenRefresh)
+    {
+        checkAndRefreshAccessToken();
+    }
+
+    int statusCode = makeGetRequest((SPOTIFY_SEARCH_ENDPOINT + query).c_str(), _bearerToken);
+#ifdef SPOTIFY_DEBUG
+    Serial.print("Status Code: ");
+    Serial.println(statusCode);
+#endif
+    if (statusCode > 0)
+    {
+        skipHeaders();
+    }
+
+    if (statusCode == 200)
+    {
+
+        // Allocate DynamicJsonDocument
+        DynamicJsonDocument doc(bufferSize);
+
+        // Parse JSON object
+#ifndef SPOTIFY_PRINT_JSON_PARSE
+        DeserializationError error = deserializeJson(doc, *client);
+#else
+        ReadLoggingStream loggingStream(*client, Serial);
+        DeserializationError error = deserializeJson(doc, loggingStream);
+#endif
+        if (!error)
+        {
+
+            uint8_t totalResults = doc["tracks"]["items"].size();
+            
+            Serial.print("Total Results: ");
+            Serial.println(totalResults);
+
+            SearchResult searchResult;
+            for (int i = 0; i < totalResults; i++)
+            {
+                JsonObject result = doc["tracks"]["items"][i];
+                searchResult.id = result["uri"].as<const char *>();
+                searchResult.title = result["name"].as<const char *>();
+                
+                Serial.println(searchResult.title);
+                results[i] = searchResult;
+
+                if (i>=limit || !searchCallback(searchResult, i, totalResults))
+                {
+                    //Break at the limit or when indicated
+                    break;
+                }
+            }
+        }
+        else
+        {
+#ifdef SPOTIFY_SERIAL_OUTPUT
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(error.c_str());
+#endif
+            statusCode = -1;
+        }
+    }
+
+    closeClient();
+    return statusCode;
+}
+
 int SpotifyArduino::commonGetImage(char *imageUrl)
 {
 #ifdef SPOTIFY_DEBUG
