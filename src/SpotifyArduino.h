@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_SERIAL_OUTPUT 1
 
 // Prints the JSON received to serial (only use for debugging as it will be slow)
-//#define SPOTIFY_PRINT_JSON_PARSE 1
+#define SPOTIFY_PRINT_JSON_PARSE 1
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -107,13 +107,6 @@ struct SpotifyDevice
   int volumePercent;
 };
 
-struct SearchResult
-{
-  const char *id;
-  const char *title;
-  //SpotifyArtist artists[SPOTIFY_MAX_NUM_ARTISTS];
-};
-
 struct PlayerDetails
 {
   SpotifyDevice device;
@@ -128,6 +121,18 @@ struct SpotifyArtist
 {
   const char *artistName;
   const char *artistUri;
+};
+
+struct SearchResult
+{
+  const char *albumName;
+  const char *albumUri;
+  const char *trackName;
+  const char *trackUri;
+  SpotifyArtist artists[SPOTIFY_MAX_NUM_ARTISTS];
+  SpotifyImage albumImages[SPOTIFY_NUM_ALBUM_IMAGES];
+  int numArtists;
+  int numImages;
 };
 
 struct CurrentlyPlaying

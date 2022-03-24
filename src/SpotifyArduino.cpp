@@ -840,7 +840,7 @@ int SpotifyArduino::searchForSong(String query, int limit, processSearch searchC
         checkAndRefreshAccessToken();
     }
 
-    int statusCode = makeGetRequest((SPOTIFY_SEARCH_ENDPOINT + query).c_str(), _bearerToken);
+    int statusCode = makeGetRequest((SPOTIFY_SEARCH_ENDPOINT + query + "&limit="+limit).c_str(), _bearerToken);
 #ifdef SPOTIFY_DEBUG
     Serial.print("Status Code: ");
     Serial.println(statusCode);
@@ -874,11 +874,39 @@ int SpotifyArduino::searchForSong(String query, int limit, processSearch searchC
             SearchResult searchResult;
             for (int i = 0; i < totalResults; i++)
             {
+                //Polling track information
                 JsonObject result = doc["tracks"]["items"][i];
-                searchResult.id = result["uri"].as<const char *>();
-                searchResult.title = result["name"].as<const char *>();
+                searchResult.trackUri = result["uri"].as<const char *>();
+                searchResult.trackName = result["name"].as<const char *>();
+                searchResult.albumUri = result["album"]["uri"].as<const char *>();
+                searchResult.albumName = result["album"]["name"].as<const char *>();
                 
-                Serial.println(searchResult.title);
+                //Pull artist Information for the result
+                uint8_t totalArtists = result["artists"].size();
+                searchResult.numArtists = totalArtists;
+                
+                SpotifyArtist artist;
+                for (int j = 0; j < totalArtists; j++){
+                    JsonObject artistResult = result["artists"][j];
+                    artist.artistName = artistResult["name"].as<const char *>();
+                    artist.artistUri = artistResult["uri"].as<const char *>();
+                    searchResult.artists[j] = artist;
+                }
+                
+                
+                uint8_t totalImages = result["album"]["images"].size();
+                searchResult.numImages = totalImages;
+                
+                SpotifyImage image;
+                for (int j = 0; j < totalImages; j++){
+                    JsonObject imageResult = result["album"]["images"][j];
+                    image.height = imageResult["height"].as<int>();
+                    image.width = imageResult["width"].as<int>();
+                    image.url = imageResult["url"].as<const char *>();
+                    searchResult.albumImages[j] = image;
+                }
+                
+                //Serial.println(searchResult.trackName);
                 results[i] = searchResult;
 
                 if (i>=limit || !searchCallback(searchResult, i, totalResults))
