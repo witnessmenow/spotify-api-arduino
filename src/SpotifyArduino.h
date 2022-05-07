@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_SERIAL_OUTPUT 1
 
 // Prints the JSON received to serial (only use for debugging as it will be slow)
-#define SPOTIFY_PRINT_JSON_PARSE 1
+//#define SPOTIFY_PRINT_JSON_PARSE 1
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
