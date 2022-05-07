@@ -108,7 +108,7 @@ void setup()
     //client.setInsecure();
 
     // If you want to enable some extra debugging
-    // uncomment the "#define SPOTIFY_DEBUG" in ArduinoSpotify.h
+    // uncomment the "#define SPOTIFY_DEBUG" in SpotifyArduino.h
 
     Serial.println("Refreshing Access Tokens");
     if (!spotify.refreshAccessToken())
@@ -119,91 +119,88 @@ void setup()
 
 void printPlayerDetailsToSerial(PlayerDetails playerDetails)
 {
-    if (!playerDetails.error)
+    Serial.println("--------- Player Details ---------");
+
+    Serial.print("Device ID: ");
+    Serial.println(playerDetails.device.id);
+
+    Serial.print("Device Name: ");
+    Serial.println(playerDetails.device.name);
+
+    Serial.print("Device Type: ");
+    Serial.println(playerDetails.device.type);
+
+    Serial.print("Is Active: ");
+    if (playerDetails.device.isActive)
     {
-        Serial.println("--------- Player Details ---------");
-
-        Serial.print("Device ID: ");
-        Serial.println(playerDetails.device.id);
-
-        Serial.print("Device Name: ");
-        Serial.println(playerDetails.device.name);
-
-        Serial.print("Device Type: ");
-        Serial.println(playerDetails.device.type);
-
-        Serial.print("Is Active: ");
-        if (playerDetails.device.isActive)
-        {
-            Serial.println("Yes");
-        }
-        else
-        {
-            Serial.println("No");
-        }
-
-        Serial.print("Is Resticted: ");
-        if (playerDetails.device.isRestricted)
-        {
-            Serial.println("Yes, from API docs \"no Web API commands will be accepted by this device\"");
-        }
-        else
-        {
-            Serial.println("No");
-        }
-
-        Serial.print("Is Private Session: ");
-        if (playerDetails.device.isPrivateSession)
-        {
-            Serial.println("Yes");
-        }
-        else
-        {
-            Serial.println("No");
-        }
-
-        Serial.print("Volume Percent: ");
-        Serial.println(playerDetails.device.volumePercent);
-
-        Serial.print("Progress (Ms): ");
-        Serial.println(playerDetails.progressMs);
-
-        Serial.print("Is Playing: ");
-        if (playerDetails.isPlaying)
-        {
-            Serial.println("Yes");
-        }
-        else
-        {
-            Serial.println("No");
-        }
-
-        Serial.print("Shuffle State: ");
-        if (playerDetails.shuffleState)
-        {
-            Serial.println("On");
-        }
-        else
-        {
-            Serial.println("Off");
-        }
-
-        Serial.print("Repeat State: ");
-        switch (playerDetails.repeateState)
-        {
-        case repeat_track:
-            Serial.println("track");
-            break;
-        case repeat_context:
-            Serial.println("context");
-            break;
-        case repeat_off:
-            Serial.println("off");
-            break;
-        }
-
-        Serial.println("------------------------");
+        Serial.println("Yes");
     }
+    else
+    {
+        Serial.println("No");
+    }
+
+    Serial.print("Is Resticted: ");
+    if (playerDetails.device.isRestricted)
+    {
+        Serial.println("Yes, from API docs \"no Web API commands will be accepted by this device\"");
+    }
+    else
+    {
+        Serial.println("No");
+    }
+
+    Serial.print("Is Private Session: ");
+    if (playerDetails.device.isPrivateSession)
+    {
+        Serial.println("Yes");
+    }
+    else
+    {
+        Serial.println("No");
+    }
+
+    Serial.print("Volume Percent: ");
+    Serial.println(playerDetails.device.volumePercent);
+
+    Serial.print("Progress (Ms): ");
+    Serial.println(playerDetails.progressMs);
+
+    Serial.print("Is Playing: ");
+    if (playerDetails.isPlaying)
+    {
+        Serial.println("Yes");
+    }
+    else
+    {
+        Serial.println("No");
+    }
+
+    Serial.print("Shuffle State: ");
+    if (playerDetails.shuffleState)
+    {
+        Serial.println("On");
+    }
+    else
+    {
+        Serial.println("Off");
+    }
+
+    Serial.print("Repeat State: ");
+    switch (playerDetails.repeateState)
+    {
+    case repeat_track:
+        Serial.println("track");
+        break;
+    case repeat_context:
+        Serial.println("context");
+        break;
+    case repeat_off:
+        Serial.println("off");
+        break;
+    }
+
+    Serial.println("------------------------");
 }
 
 void loop()
