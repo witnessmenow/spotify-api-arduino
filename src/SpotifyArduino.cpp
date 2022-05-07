@@ -825,6 +825,111 @@ int SpotifyArduino::getDevices(processDevices devicesCallback)
     return statusCode;
 }
 
+int SpotifyArduino::searchForSong(String query, int limit, processSearch searchCallback, SearchResult results[])
+{
+
+#ifdef SPOTIFY_DEBUG
+    Serial.println(SPOTIFY_SEARCH_ENDPOINT);
+    printStack();
+#endif
+
+    // Get from https://arduinojson.org/v6/assistant/
+    const size_t bufferSize = searchDetailsBufferSize;
+    if (autoTokenRefresh)
+    {
+        checkAndRefreshAccessToken();
+    }
+
+    int statusCode = makeGetRequest((SPOTIFY_SEARCH_ENDPOINT + query + "&limit="+limit).c_str(), _bearerToken);
+#ifdef SPOTIFY_DEBUG
+    Serial.print("Status Code: ");
+    Serial.println(statusCode);
+#endif
+    if (statusCode > 0)
+    {
+        skipHeaders();
+    }
+
+    if (statusCode == 200)
+    {
+
+        // Allocate DynamicJsonDocument
+        DynamicJsonDocument doc(bufferSize);
+
+        // Parse JSON object
+#ifndef SPOTIFY_PRINT_JSON_PARSE
+        DeserializationError error = deserializeJson(doc, *client);
+#else
+        ReadLoggingStream loggingStream(*client, Serial);
+        DeserializationError error = deserializeJson(doc, loggingStream);
+#endif
+        if (!error)
+        {
+
+            uint8_t totalResults = doc["tracks"]["items"].size();
+            
+            Serial.print("Total Results: ");
+            Serial.println(totalResults);
+
+            SearchResult searchResult;
+            for (int i = 0; i < totalResults; i++)
+            {
+                //Polling track information
+                JsonObject result = doc["tracks"]["items"][i];
+                searchResult.trackUri = result["uri"].as<const char *>();
+                searchResult.trackName = result["name"].as<const char *>();
+                searchResult.albumUri = result["album"]["uri"].as<const char *>();
+                searchResult.albumName = result["album"]["name"].as<const char *>();
+                
+                //Pull artist Information for the result
+                uint8_t totalArtists = result["artists"].size();
+                searchResult.numArtists = totalArtists;
+                
+                SpotifyArtist artist;
+                for (int j = 0; j < totalArtists; j++){
+                    JsonObject artistResult = result["artists"][j];
+                    artist.artistName = artistResult["name"].as<const char *>();
+                    artist.artistUri = artistResult["uri"].as<const char *>();
+                    searchResult.artists[j] = artist;
+                }
+                
+                
+                uint8_t totalImages = result["album"]["images"].size();
+                searchResult.numImages = totalImages;
+                
+                SpotifyImage image;
+                for (int j = 0; j < totalImages; j++){
+                    JsonObject imageResult = result["album"]["images"][j];
+                    image.height = imageResult["height"].as<int>();
+                    image.width = imageResult["width"].as<int>();
+                    image.url = imageResult["url"].as<const char *>();
+                    searchResult.albumImages[j] = image;
+                }
+                
+                //Serial.println(searchResult.trackName);
+                results[i] = searchResult;
+
+                if (i>=limit || !searchCallback(searchResult, i, totalResults))
+                {
+                    //Break at the limit or when indicated
+                    break;
+                }
+            }
+        }
+        else
+        {
+#ifdef SPOTIFY_SERIAL_OUTPUT
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(error.c_str());
+#endif
+            statusCode = -1;
+        }
+    }
+
+    closeClient();
+    return statusCode;
+}
+
 int SpotifyArduino::commonGetImage(char *imageUrl)
 {
 #ifdef SPOTIFY_DEBUG

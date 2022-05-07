@@ -42,6 +42,7 @@ The Library supports the following features:
   - Set Repeat Modes
   - Toggle Shuffle
 - Get Devices
+- Search Spotify Library
 
 ### What needs to be added:
 

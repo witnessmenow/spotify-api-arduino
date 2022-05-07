@@ -63,6 +63,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_DEVICES_ENDPOINT "/v1/me/player/devices"
 
 #define SPOTIFY_PLAY_ENDPOINT "/v1/me/player/play"
+#define SPOTIFY_SEARCH_ENDPOINT "/v1/search"
 #define SPOTIFY_PAUSE_ENDPOINT "/v1/me/player/pause"
 #define SPOTIFY_VOLUME_ENDPOINT "/v1/me/player/volume?volume_percent=%d"
 #define SPOTIFY_SHUFFLE_ENDPOINT "/v1/me/player/shuffle?state=%s"
@@ -122,6 +123,18 @@ struct SpotifyArtist
   const char *artistUri;
 };
 
+struct SearchResult
+{
+  const char *albumName;
+  const char *albumUri;
+  const char *trackName;
+  const char *trackUri;
+  SpotifyArtist artists[SPOTIFY_MAX_NUM_ARTISTS];
+  SpotifyImage albumImages[SPOTIFY_NUM_ALBUM_IMAGES];
+  int numArtists;
+  int numImages;
+};
+
 struct CurrentlyPlaying
 {
   SpotifyArtist artists[SPOTIFY_MAX_NUM_ARTISTS];
@@ -140,6 +153,7 @@ struct CurrentlyPlaying
 typedef void (*processCurrentlyPlaying)(CurrentlyPlaying currentlyPlaying);
 typedef void (*processPlayerDetails)(PlayerDetails playerDetails);
 typedef bool (*processDevices)(SpotifyDevice device, int index, int numDevices);
+typedef bool (*processSearch)(SearchResult result, int index, int numResults);
 
 class SpotifyArduino
 {
@@ -176,6 +190,9 @@ public:
   bool playerNavigate(char *command, const char *deviceId = "");
   bool seek(int position, const char *deviceId = "");
   bool transferPlayback(const char *deviceId, bool play = false);
+    
+  //Search
+  int searchForSong(String query, int limit, processSearch searchCallback, SearchResult results[]);
 
   // Image methods
   bool getImage(char *imageUrl, Stream *file);
@@ -185,6 +202,7 @@ public:
   int currentlyPlayingBufferSize = 3000;
   int playerDetailsBufferSize = 2000;
   int getDevicesBufferSize = 3000;
+  int searchDetailsBufferSize = 3000;
   bool autoTokenRefresh = true;
   Client *client;
   void lateInit(const char *clientId, const char *clientSecret, const char *refreshToken = "");
