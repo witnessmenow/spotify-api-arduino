@@ -36,7 +36,7 @@ SpotifyArduino::SpotifyArduino(Client &client, const char *clientId, const char 
     this->client = &client;
     this->_clientId = clientId;
     this->_clientSecret = clientSecret;
-    this->_refreshToken = refreshToken;
+    setRefreshToken(refreshToken);
 }
 
 int SpotifyArduino::makeRequestWithBody(const char *type, const char *command, const char *authorization, const char *body, const char *contentType, const char *host)
@@ -160,7 +160,14 @@ int SpotifyArduino::makeGetRequest(const char *command, const char *authorizatio
 
 void SpotifyArduino::setRefreshToken(const char *refreshToken)
 {
-    _refreshToken = refreshToken;
+    int newRefreshTokenLen = strlen(refreshToken);
+    if (_refreshToken == NULL || strlen(_refreshToken) < newRefreshTokenLen)
+    {
+        delete _refreshToken;
+        _refreshToken = new char[newRefreshTokenLen + 1]();
+    }
+
+    strncpy(_refreshToken, refreshToken, newRefreshTokenLen + 1);
 }
 
 bool SpotifyArduino::refreshAccessToken()
@@ -291,7 +298,7 @@ const char *SpotifyArduino::requestAccessTokens(const char *code, const char *re
         if (!error)
         {
             sprintf(this->_bearerToken, "Bearer %s", doc["access_token"].as<const char *>());
-            _refreshToken = doc["refresh_token"].as<const char *>();
+            setRefreshToken(doc["refresh_token"].as<const char *>());
             int tokenTtl = doc["expires_in"];             // Usually 3600 (1 hour)
             tokenTimeToLiveMs = (tokenTtl * 1000) - 2000; // The 2000 is just to force the token expiry to check if its very close
             timeTokenRefreshed = now;
@@ -840,7 +847,7 @@ int SpotifyArduino::searchForSong(String query, int limit, processSearch searchC
         checkAndRefreshAccessToken();
     }
 
-    int statusCode = makeGetRequest((SPOTIFY_SEARCH_ENDPOINT + query + "&limit="+limit).c_str(), _bearerToken);
+    int statusCode = makeGetRequest((SPOTIFY_SEARCH_ENDPOINT + query + "&limit=" + limit).c_str(), _bearerToken);
 #ifdef SPOTIFY_DEBUG
     Serial.print("Status Code: ");
     Serial.println(statusCode);
@@ -867,7 +874,7 @@ int SpotifyArduino::searchForSong(String query, int limit, processSearch searchC
         {
 
             uint8_t totalResults = doc["tracks"]["items"].size();
-            
+
             Serial.print("Total Results: ");
             Serial.println(totalResults);
 
@@ -880,36 +887,37 @@ int SpotifyArduino::searchForSong(String query, int limit, processSearch searchC
                 searchResult.trackName = result["name"].as<const char *>();
                 searchResult.albumUri = result["album"]["uri"].as<const char *>();
                 searchResult.albumName = result["album"]["name"].as<const char *>();
-                
+
                 //Pull artist Information for the result
                 uint8_t totalArtists = result["artists"].size();
                 searchResult.numArtists = totalArtists;
-                
+
                 SpotifyArtist artist;
-                for (int j = 0; j < totalArtists; j++){
+                for (int j = 0; j < totalArtists; j++)
+                {
                     JsonObject artistResult = result["artists"][j];
                     artist.artistName = artistResult["name"].as<const char *>();
                     artist.artistUri = artistResult["uri"].as<const char *>();
                     searchResult.artists[j] = artist;
                 }
-                
-                
+
                 uint8_t totalImages = result["album"]["images"].size();
                 searchResult.numImages = totalImages;
-                
+
                 SpotifyImage image;
-                for (int j = 0; j < totalImages; j++){
+                for (int j = 0; j < totalImages; j++)
+                {
                     JsonObject imageResult = result["album"]["images"][j];
                     image.height = imageResult["height"].as<int>();
                     image.width = imageResult["width"].as<int>();
                     image.url = imageResult["url"].as<const char *>();
                     searchResult.albumImages[j] = image;
                 }
-                
+
                 //Serial.println(searchResult.trackName);
                 results[i] = searchResult;
 
-                if (i>=limit || !searchCallback(searchResult, i, totalResults))
+                if (i >= limit || !searchCallback(searchResult, i, totalResults))
                 {
                     //Break at the limit or when indicated
                     break;
@@ -1202,7 +1210,7 @@ void SpotifyArduino::lateInit(const char *clientId, const char *clientSecret, co
 {
     this->_clientId = clientId;
     this->_clientSecret = clientSecret;
-    this->_refreshToken = refreshToken;
+    setRefreshToken(refreshToken);
 }
 
 void SpotifyArduino::closeClient()

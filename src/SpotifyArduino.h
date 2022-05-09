@@ -217,7 +217,7 @@ public:
 
 private:
   char _bearerToken[SPOTIFY_ACCESS_TOKEN_LENGTH + 10]; //10 extra is for "bearer " at the start
-  const char *_refreshToken;
+  char *_refreshToken;
   const char *_clientId;
   const char *_clientSecret;
   unsigned int timeTokenRefreshed;
