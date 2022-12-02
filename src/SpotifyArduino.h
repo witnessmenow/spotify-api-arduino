@@ -103,9 +103,8 @@ struct SpiRamAllocator {
     return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
   }
 };
-#endif
-
 using SpiRamJsonDocument = BasicJsonDocument<SpiRamAllocator>;
+#endif
 
 enum RepeatOptions
 {
