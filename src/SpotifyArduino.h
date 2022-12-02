@@ -34,6 +34,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 // Prints the JSON received to serial (only use for debugging as it will be slow)
 //#define SPOTIFY_PRINT_JSON_PARSE 1
 
+// Use PSRAM for ArduinoJSON
+//#define SPOTIFY_JSON_PSRAM 1
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Client.h>
@@ -85,6 +88,24 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_MAX_NUM_ARTISTS 5
 
 #define SPOTIFY_ACCESS_TOKEN_LENGTH 309
+
+#ifdef SPOTIFY_JSON_PSRAM
+struct SpiRamAllocator {
+  void* allocate(size_t size) {
+    return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+  }
+
+  void deallocate(void* pointer) {
+    heap_caps_free(pointer);
+  }
+
+  void* reallocate(void* ptr, size_t new_size) {
+    return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
+  }
+};
+#endif
+
+using SpiRamJsonDocument = BasicJsonDocument<SpiRamAllocator>;
 
 enum RepeatOptions
 {
