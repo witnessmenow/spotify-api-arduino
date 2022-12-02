@@ -195,12 +195,20 @@ bool SpotifyArduino::refreshAccessToken()
     bool refreshed = false;
     if (statusCode == 200)
     {
+#ifdef SPOTIFY_JSON_PSRAM
+        SpiRamJsonDocument filter(48);
+#else
         StaticJsonDocument<48> filter;
+#endif
         filter["access_token"] = true;
         filter["token_type"] = true;
         filter["expires_in"] = true;
 
+#ifdef SPOTIFY_JSON_PSRAM
+        SpiRamJsonDocument doc(512);
+#else
         DynamicJsonDocument doc(512);
+#endif
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
@@ -287,7 +295,11 @@ const char *SpotifyArduino::requestAccessTokens(const char *code, const char *re
 
     if (statusCode == 200)
     {
+#ifdef SPOTIFY_JSON_PSRAM
+        SpiRamJsonDocument doc(1000);
+#else
         DynamicJsonDocument doc(1000);
+#endif
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
         DeserializationError error = deserializeJson(doc, *client);
@@ -538,7 +550,11 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
         CurrentlyPlaying current;
 
         //Apply Json Filter: https://arduinojson.org/v6/example/filter/
+#ifdef SPOTIFY_JSON_PSRAM
+        SpiRamJsonDocument filter(288);
+#else
         StaticJsonDocument<288> filter;
+#endif
         filter["is_playing"] = true;
         filter["progress_ms"] = true;
 
@@ -561,7 +577,11 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
         filter_item_album_images_0["url"] = true;
 
         // Allocate DynamicJsonDocument
+#ifdef SPOTIFY_JSON_PSRAM
+        SpiRamJsonDocument doc(bufferSize);
+#else
         DynamicJsonDocument doc(bufferSize);
+#endif
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
@@ -679,8 +699,11 @@ int SpotifyArduino::getPlayerDetails(processPlayerDetails playerDetailsCallback,
 
     if (statusCode == 200)
     {
-
+#ifdef SPOTIFY_JSON_PSRAM
+        SpiRamJsonDocument filter(192);
+#else
         StaticJsonDocument<192> filter;
+#endif
         JsonObject filter_device = filter.createNestedObject("device");
         filter_device["id"] = true;
         filter_device["name"] = true;
@@ -695,7 +718,11 @@ int SpotifyArduino::getPlayerDetails(processPlayerDetails playerDetailsCallback,
         filter["repeat_state"] = true;
 
         // Allocate DynamicJsonDocument
+#ifdef SPOTIFY_JSON_PSRAM
+        SpiRamJsonDocument doc(bufferSize);
+#else
         DynamicJsonDocument doc(bufferSize);
+#endif
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
@@ -784,7 +811,11 @@ int SpotifyArduino::getDevices(processDevices devicesCallback)
     {
 
         // Allocate DynamicJsonDocument
+#ifdef SPOTIFY_JSON_PSRAM
+        SpiRamJsonDocument doc(bufferSize);
+#else
         DynamicJsonDocument doc(bufferSize);
+#endif
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
@@ -861,7 +892,11 @@ int SpotifyArduino::searchForSong(String query, int limit, processSearch searchC
     {
 
         // Allocate DynamicJsonDocument
+#ifdef SPOTIFY_JSON_PSRAM
+        SpiRamJsonDocument doc(bufferSize);
+#else
         DynamicJsonDocument doc(bufferSize);
+#endif
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
@@ -1192,7 +1227,11 @@ void SpotifyArduino::parseError()
 {
     //This method doesn't currently do anything other than print
 #ifdef SPOTIFY_SERIAL_OUTPUT
+#ifdef SPOTIFY_JSON_PSRAM
+    SpiRamJsonDocument doc(1000);
+#else
     DynamicJsonDocument doc(1000);
+#endif
     DeserializationError error = deserializeJson(doc, *client);
     if (!error)
     {
