@@ -1,5 +1,5 @@
 /*******************************************************************
-    Displays Album Art on an 64 x 64 RGB LED Matrix. ESP32 Only
+    Displays Album Art on an 128 x 160 display. ESP32 Only
 
     There is two approaches to this demoed in this example
       - "displayImage" uses a memory buffer, it should be the fastest but possible uses the most memory.
@@ -7,12 +7,12 @@
 
     All references to SPIFFS are only required for the "displayImageUsingFile" path.
 
-    This example could easily be adapted to any Adafruit GFX
+    This example could easily be adapted to any TFT 
     based screen.
 
     The library for the display will need to be modified to work
-    with a 64x64 matrix:
-    https://github.com/witnessmenow/ESP32-i2s-Matrix-Shield#using-a-64x64-display
+    with a 128x160 display:
+    https://github.com/Bodmer/TFT_eSPI
 
     NOTE: You need to get a Refresh token to use this example
     Use the getRefreshToken example to get it.
@@ -20,19 +20,8 @@
     Parts:
     ESP32 D1 Mini stlye Dev board* - http://s.click.aliexpress.com/e/C6ds4my
     ESP32 I2S Matrix Shield (From my Tindie) = https://www.tindie.com/products/brianlough/esp32-i2s-matrix-shield/
-    64 x 64 RGB LED Matrix* - https://s.click.aliexpress.com/e/_BfjY0wfp
+    128x160 LCD Screen - shorturl.at/elKQV
 
- *  * = Affilate
-
-    If you find what I do useful and would like to support me,
-    please consider becoming a sponsor on Github
-    https://github.com/sponsors/witnessmenow/
-
-
-    Written by Brian Lough
-    YouTube: https://www.youtube.com/brianlough
-    Tindie: https://www.tindie.com/stores/brianlough/
-    Twitter: https://twitter.com/witnessmenow
  *******************************************************************/
 
 // ----------------------------
