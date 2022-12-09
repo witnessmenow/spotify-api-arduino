@@ -7,7 +7,7 @@
 
     All references to SPIFFS are only required for the "displayImageUsingFile" path.
 
-    This example could easily be adapted to any TFT 
+    This example could easily be adapted to any TFT
     based screen.
 
     The library for the display will need to be modified to work
@@ -317,24 +317,22 @@ void loop()
         int status = spotify.getCurrentlyPlaying(printCurrentlyPlayingToSerial, SPOTIFY_MARKET);
         if (status == 200)
         {
+            Serial.println("Successfully got currently playing");
+            String newAlbum = String(smallestImage.url);
+            if (newAlbum != lastAlbumArtUrl)
             {
-                Serial.println("Successfully got currently playing");
-                String newAlbum = String(smallestImage.url);
-                if (newAlbum != lastAlbumArtUrl)
-                {
-                    Serial.println("Updating Art");
-                    char *my_url = const_cast<char *>(smallestImage.url);
-                    int displayImageResult = displayImage(my_url);
+                Serial.println("Updating Art");
+                char *my_url = const_cast<char *>(smallestImage.url);
+                int displayImageResult = displayImage(my_url);
 
-                    if (displayImageResult == 0)
-                    {
-                        lastAlbumArtUrl = newAlbum;
-                    }
-                    else
-                    {
-                        Serial.print("failed to display image: ");
-                        Serial.println(displayImageResult);
-                    }
+                if (displayImageResult == 0)
+                {
+                    lastAlbumArtUrl = newAlbum;
+                }
+                else
+                {
+                    Serial.print("failed to display image: ");
+                    Serial.println(displayImageResult);
                 }
             }
             else if (status == 204)
@@ -352,7 +350,7 @@ void loop()
     }
 }
 
-//Method to draw messages at a certain point on a TFT Display.
+// Method to draw messages at a certain point on a TFT Display.
 void drawMessage(int x, int y, char *message)
 {
     tft.setTextColor(TFT_WHITE);
