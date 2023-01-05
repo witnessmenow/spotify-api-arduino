@@ -174,11 +174,6 @@ struct CurrentlyPlaying
   long durationMs;
 };
 
-typedef void (*processCurrentlyPlaying)(CurrentlyPlaying currentlyPlaying);
-typedef void (*processPlayerDetails)(PlayerDetails playerDetails);
-typedef bool (*processDevices)(SpotifyDevice device, int index, int numDevices);
-typedef bool (*processSearch)(SearchResult result, int index, int numResults);
-
 class SpotifyArduino
 {
 public:
