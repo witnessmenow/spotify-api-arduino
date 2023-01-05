@@ -512,7 +512,7 @@ bool SpotifyArduino::transferPlayback(const char *deviceId, bool play)
     return statusCode == 204;
 }
 
-int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlayingCallback, const char *market)
+int SpotifyArduino::getCurrentlyPlaying(std::function<void(CurrentlyPlaying)> currentlyPlayingCallback, const char *market)
 {
     char command[50] = SPOTIFY_CURRENTLY_PLAYING_ENDPOINT;
     if (market[0] != 0)
@@ -665,7 +665,7 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
     return statusCode;
 }
 
-int SpotifyArduino::getPlayerDetails(processPlayerDetails playerDetailsCallback, const char *market)
+int SpotifyArduino::getPlayerDetails(std::function<void(PlayerDetails)> playerDetailsCallback, const char *market)
 {
     char command[100] = SPOTIFY_PLAYER_ENDPOINT;
     if (market[0] != 0)
@@ -782,7 +782,7 @@ int SpotifyArduino::getPlayerDetails(processPlayerDetails playerDetailsCallback,
     return statusCode;
 }
 
-int SpotifyArduino::getDevices(processDevices devicesCallback)
+int SpotifyArduino::getDevices(std::function<bool(SpotifyDevice device, int index, int numDevices)> devicesCallback)
 {
 
 #ifdef SPOTIFY_DEBUG
@@ -863,7 +863,7 @@ int SpotifyArduino::getDevices(processDevices devicesCallback)
     return statusCode;
 }
 
-int SpotifyArduino::searchForSong(String query, int limit, processSearch searchCallback, SearchResult results[])
+int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(SearchResult result, int index, int numResults)> searchCallback, SearchResult results[])
 {
 
 #ifdef SPOTIFY_DEBUG

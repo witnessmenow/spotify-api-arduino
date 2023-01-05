@@ -199,9 +199,9 @@ public:
   int makePutRequest(const char *command, const char *authorization, const char *body = "", const char *contentType = "application/json", const char *host = SPOTIFY_HOST);
 
   // User methods
-  int getCurrentlyPlaying(processCurrentlyPlaying currentlyPlayingCallback, const char *market = "");
-  int getPlayerDetails(processPlayerDetails playerDetailsCallback, const char *market = "");
-  int getDevices(processDevices devicesCallback);
+  int getCurrentlyPlaying(std::function<void(CurrentlyPlaying)> currentlyPlayingCallback, const char *market = "");
+  int getPlayerDetails(std::function<void(PlayerDetails)> playerDetailsCallback, const char *market = "");
+  int getDevices(std::function<bool(SpotifyDevice device, int index, int numDevices)> devicesCallback);
   bool play(const char *deviceId = "");
   bool playAdvanced(char *body, const char *deviceId = "");
   bool pause(const char *deviceId = "");
@@ -216,7 +216,7 @@ public:
   bool transferPlayback(const char *deviceId, bool play = false);
     
   //Search
-  int searchForSong(String query, int limit, processSearch searchCallback, SearchResult results[]);
+  int searchForSong(String query, int limit, std::function<bool(SearchResult result, int index, int numResults)> searchCallback, SearchResult results[]);
 
   // Image methods
   bool getImage(char *imageUrl, Stream *file);
