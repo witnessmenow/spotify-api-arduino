@@ -20,18 +20,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #include "SpotifyArduino.h"
 
-SpotifyArduino::SpotifyArduino(Client &client)
+SpotifyArduino::SpotifyArduino(WiFiClient &client)
 {
     this->client = &client;
 }
 
-SpotifyArduino::SpotifyArduino(Client &client, char *bearerToken)
+SpotifyArduino::SpotifyArduino(WiFiClient &client, char *bearerToken)
 {
     this->client = &client;
     sprintf(this->_bearerToken, "Bearer %s", bearerToken);
 }
 
-SpotifyArduino::SpotifyArduino(Client &client, const char *clientId, const char *clientSecret, const char *refreshToken)
+SpotifyArduino::SpotifyArduino(WiFiClient &client, const char *clientId, const char *clientSecret, const char *refreshToken)
 {
     this->client = &client;
     this->_clientId = clientId;
@@ -39,123 +39,51 @@ SpotifyArduino::SpotifyArduino(Client &client, const char *clientId, const char 
     setRefreshToken(refreshToken);
 }
 
-int SpotifyArduino::makeRequestWithBody(const char *type, const char *command, const char *authorization, const char *body, const char *contentType, const char *host)
-{
-    client->flush();
-#ifdef SPOTIFY_DEBUG
-    Serial.println(host);
-#endif
-    client->setTimeout(SPOTIFY_TIMEOUT);
-    if (!client->connect(host, portNumber))
-    {
-#ifdef SPOTIFY_SERIAL_OUTPUT
-        Serial.println(F("Connection failed"));
-#endif
-        return -1;
-    }
-
-    // give the esp a breather
-    yield();
-
-    // Send HTTP request
-    client->print(type);
-    client->print(command);
-    client->println(F(" HTTP/1.0"));
-
-    //Headers
-    client->print(F("Host: "));
-    client->println(host);
-
-    client->println(F("Accept: application/json"));
-    client->print(F("Content-Type: "));
-    client->println(contentType);
-
-    if (authorization != NULL)
-    {
-        client->print(F("Authorization: "));
-        client->println(authorization);
-    }
-
-    client->println(F("Cache-Control: no-cache"));
-
-    client->print(F("Content-Length: "));
-    client->println(strlen(body));
-
-    client->println();
-
-    client->print(body);
-
-    if (client->println() == 0)
-    {
-#ifdef SPOTIFY_SERIAL_OUTPUT
-        Serial.println(F("Failed to send request"));
-#endif
-        return -2;
-    }
-
-    int statusCode = getHttpStatusCode();
-    return statusCode;
-}
-
 int SpotifyArduino::makePutRequest(const char *command, const char *authorization, const char *body, const char *contentType, const char *host)
 {
-    return makeRequestWithBody("PUT ", command, authorization, body, contentType);
+    https.begin(*client, host, 443, command, true);
+    https.useHTTP10(true);
+    https.addHeader("Host", host);
+    https.addHeader("Accept", "application/json");
+    https.addHeader("Content-Type", contentType);
+    if (authorization != NULL)
+    {
+        https.addHeader("Authorization", authorization);
+    }
+    https.addHeader("Cache-Control", "no-cache");
+    return https.PUT(body);
 }
 
 int SpotifyArduino::makePostRequest(const char *command, const char *authorization, const char *body, const char *contentType, const char *host)
 {
-    return makeRequestWithBody("POST ", command, authorization, body, contentType, host);
+    https.begin(*client, host, 443, command, true);
+    https.useHTTP10(true);
+    https.addHeader("Host", host);
+    https.addHeader("Accept", "application/json");
+    https.addHeader("Content-Type", contentType);
+    if (authorization != NULL)
+    {
+        https.addHeader("Authorization", authorization);
+    }
+    https.addHeader("Cache-Control", "no-cache");
+    return https.POST(body);
 }
 
 int SpotifyArduino::makeGetRequest(const char *command, const char *authorization, const char *accept, const char *host)
 {
-    client->flush();
-    client->setTimeout(SPOTIFY_TIMEOUT);
-    if (!client->connect(host, portNumber))
-    {
-#ifdef SPOTIFY_SERIAL_OUTPUT
-        Serial.println(F("Connection failed"));
-#endif
-        return -1;
-    }
-
-    // give the esp a breather
-    yield();
-
-    // Send HTTP request
-    client->print(F("GET "));
-    client->print(command);
-    client->println(F(" HTTP/1.0"));
-
-    //Headers
-    client->print(F("Host: "));
-    client->println(host);
-
+    https.begin(*client, host, 443, command, true);
+    https.useHTTP10(true);
+    https.addHeader("Host", host);
     if (accept != NULL)
     {
-        client->print(F("Accept: "));
-        client->println(accept);
+        https.addHeader("Accept", accept);
     }
-
     if (authorization != NULL)
     {
-        client->print(F("Authorization: "));
-        client->println(authorization);
+        https.addHeader("Authorization", authorization);
     }
-
-    client->println(F("Cache-Control: no-cache"));
-
-    if (client->println() == 0)
-    {
-#ifdef SPOTIFY_SERIAL_OUTPUT
-        Serial.println(F("Failed to send request"));
-#endif
-        return -2;
-    }
-
-    int statusCode = getHttpStatusCode();
-
-    return statusCode;
+    https.addHeader("Cache-Control", "no-cache");
+    return https.GET();
 }
 
 void SpotifyArduino::setRefreshToken(const char *refreshToken)
@@ -181,10 +109,6 @@ bool SpotifyArduino::refreshAccessToken()
 #endif
 
     int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
-    if (statusCode > 0)
-    {
-        skipHeaders();
-    }
     unsigned long now = millis();
 
 #ifdef SPOTIFY_DEBUG
@@ -212,9 +136,9 @@ bool SpotifyArduino::refreshAccessToken()
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
-        DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
+        DeserializationError error = deserializeJson(doc, https.getStream(), DeserializationOption::Filter(filter));
 #else
-        ReadLoggingStream loggingStream(*client, Serial);
+        ReadLoggingStream loggingStream(https.getStream(), Serial);
         DeserializationError error = deserializeJson(doc, loggingStream, DeserializationOption::Filter(filter));
 #endif
         if (!error)
@@ -282,10 +206,6 @@ const char *SpotifyArduino::requestAccessTokens(const char *code, const char *re
 #endif
 
     int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
-    if (statusCode > 0)
-    {
-        skipHeaders();
-    }
     unsigned long now = millis();
 
 #ifdef SPOTIFY_DEBUG
@@ -302,9 +222,9 @@ const char *SpotifyArduino::requestAccessTokens(const char *code, const char *re
 #endif
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
-        DeserializationError error = deserializeJson(doc, *client);
+        DeserializationError error = deserializeJson(doc, https.getStream());
 #else
-        ReadLoggingStream loggingStream(*client, Serial);
+        ReadLoggingStream loggingStream(https.getStream(), Serial);
         DeserializationError error = deserializeJson(doc, loggingStream);
 #endif
         if (!error)
@@ -540,11 +460,6 @@ int SpotifyArduino::getCurrentlyPlaying(std::function<void(CurrentlyPlaying)> cu
     Serial.println(statusCode);
     printStack();
 #endif
-    if (statusCode > 0)
-    {
-        skipHeaders();
-    }
-
     if (statusCode == 200)
     {
         CurrentlyPlaying current;
@@ -585,9 +500,9 @@ int SpotifyArduino::getCurrentlyPlaying(std::function<void(CurrentlyPlaying)> cu
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
-        DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
+        DeserializationError error = deserializeJson(doc, https.getStream(), DeserializationOption::Filter(filter));
 #else
-        ReadLoggingStream loggingStream(*client, Serial);
+        ReadLoggingStream loggingStream(https.getStream(), Serial);
         DeserializationError error = deserializeJson(doc, loggingStream, DeserializationOption::Filter(filter));
 #endif
         if (!error)
@@ -692,11 +607,6 @@ int SpotifyArduino::getPlayerDetails(std::function<void(PlayerDetails)> playerDe
     Serial.print("Status Code: ");
     Serial.println(statusCode);
 #endif
-    if (statusCode > 0)
-    {
-        skipHeaders();
-    }
-
     if (statusCode == 200)
     {
 #ifdef SPOTIFY_JSON_PSRAM
@@ -726,9 +636,9 @@ int SpotifyArduino::getPlayerDetails(std::function<void(PlayerDetails)> playerDe
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
-        DeserializationError error = deserializeJson(doc, *client, DeserializationOption::Filter(filter));
+        DeserializationError error = deserializeJson(doc, https.getStream(), DeserializationOption::Filter(filter));
 #else
-        ReadLoggingStream loggingStream(*client, Serial);
+        ReadLoggingStream loggingStream(https.getStream(), Serial);
         DeserializationError error = deserializeJson(doc, loggingStream, DeserializationOption::Filter(filter));
 #endif
         if (!error)
@@ -802,10 +712,6 @@ int SpotifyArduino::getDevices(std::function<bool(SpotifyDevice device, int inde
     Serial.print("Status Code: ");
     Serial.println(statusCode);
 #endif
-    if (statusCode > 0)
-    {
-        skipHeaders();
-    }
 
     if (statusCode == 200)
     {
@@ -819,9 +725,9 @@ int SpotifyArduino::getDevices(std::function<bool(SpotifyDevice device, int inde
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
-        DeserializationError error = deserializeJson(doc, *client);
+        DeserializationError error = deserializeJson(doc, https.getStream());
 #else
-        ReadLoggingStream loggingStream(*client, Serial);
+        ReadLoggingStream loggingStream(https.getStream(), Serial);
         DeserializationError error = deserializeJson(doc, loggingStream);
 #endif
         if (!error)
@@ -883,10 +789,6 @@ int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(Se
     Serial.print("Status Code: ");
     Serial.println(statusCode);
 #endif
-    if (statusCode > 0)
-    {
-        skipHeaders();
-    }
 
     if (statusCode == 200)
     {
@@ -900,9 +802,9 @@ int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(Se
 
         // Parse JSON object
 #ifndef SPOTIFY_PRINT_JSON_PARSE
-        DeserializationError error = deserializeJson(doc, *client);
+        DeserializationError error = deserializeJson(doc, https.getStream());
 #else
-        ReadLoggingStream loggingStream(*client, Serial);
+        ReadLoggingStream loggingStream(https.getStream(), Serial);
         DeserializationError error = deserializeJson(doc, loggingStream);
 #endif
         if (!error)
@@ -1049,22 +951,21 @@ bool SpotifyArduino::getImage(char *imageUrl, Stream *file)
 #endif
     if (totalLength > 0)
     {
-        skipHeaders(false);
         int remaining = totalLength;
         // This section of code is inspired but the "Web_Jpg"
         // example of TJpg_Decoder
         // https://github.com/Bodmer/TJpg_Decoder
         // -----------
         uint8_t buff[128] = {0};
-        while (client->connected() && (remaining > 0 || remaining == -1))
+        while (https.connected() && (remaining > 0 || remaining == -1))
         {
             // Get available data size
-            size_t size = client->available();
+            size_t size = https.getStream().available();
 
             if (size)
             {
                 // Read up to 128 bytes
-                int c = client->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+                int c = https.getStream().readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
 
                 // Write it to file
                 file->write(buff, c);
@@ -1098,7 +999,6 @@ bool SpotifyArduino::getImage(char *imageUrl, uint8_t **image, int *imageLength)
 #endif
     if (totalLength > 0)
     {
-        skipHeaders(false);
         uint8_t *imgPtr = (uint8_t *)malloc(totalLength);
         *image = imgPtr;
         *imageLength = totalLength;
@@ -1114,15 +1014,15 @@ bool SpotifyArduino::getImage(char *imageUrl, uint8_t **image, int *imageLength)
         // https://github.com/Bodmer/TJpg_Decoder
         // -----------
         uint8_t buff[128] = {0};
-        while (client->connected() && (remaining > 0 || remaining == -1))
+        while (https.connected() && (remaining > 0 || remaining == -1))
         {
             // Get available data size
-            size_t size = client->available();
+            size_t size = https.getStream().available();
 
             if (size)
             {
                 // Read up to 128 bytes
-                int c = client->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+                int c = https.getStream().readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
 
                 // Write it to file
                 memcpy((uint8_t *)imgPtr + amountRead, (uint8_t *)buff, c);
@@ -1149,78 +1049,12 @@ bool SpotifyArduino::getImage(char *imageUrl, uint8_t **image, int *imageLength)
 
 int SpotifyArduino::getContentLength()
 {
-
-    if (client->find("Content-Length:"))
-    {
-        int contentLength = client->parseInt();
 #ifdef SPOTIFY_DEBUG
         Serial.print(F("Content-Length: "));
-        Serial.println(contentLength);
-#endif
-        return contentLength;
-    }
-
-    return -1;
-}
-
-void SpotifyArduino::skipHeaders(bool tossUnexpectedForJSON)
-{
-    // Skip HTTP headers
-    if (!client->find("\r\n\r\n"))
-    {
-#ifdef SPOTIFY_SERIAL_OUTPUT
-        Serial.println(F("Invalid response"));
-#endif
-        return;
-    }
-
-    if (tossUnexpectedForJSON)
-    {
-        // Was getting stray characters between the headers and the body
-        // This should toss them away
-        while (client->available() && client->peek() != '{')
-        {
-            char c = 0;
-            client->readBytes(&c, 1);
-#ifdef SPOTIFY_DEBUG
-            Serial.print(F("Tossing an unexpected character: "));
-            Serial.println(c);
-#endif
-        }
-    }
-}
-
-int SpotifyArduino::getHttpStatusCode()
-{
-    char status[32] = {0};
-    client->readBytesUntil('\r', status, sizeof(status));
-#ifdef SPOTIFY_DEBUG
-    Serial.print(F("Status: "));
-    Serial.println(status);
+        Serial.println(https.getSize());
 #endif
 
-    char *token;
-    token = strtok(status, " "); // https://www.tutorialspoint.com/c_standard_library/c_function_strtok.htm
-
-#ifdef SPOTIFY_DEBUG
-    Serial.print(F("HTTP Version: "));
-    Serial.println(token);
-#endif
-
-    if (token != NULL && (strcmp(token, "HTTP/1.0") == 0 || strcmp(token, "HTTP/1.1") == 0))
-    {
-        token = strtok(NULL, " ");
-        if (token != NULL)
-        {
-#ifdef SPOTIFY_DEBUG
-            Serial.print(F("Status Code: "));
-            Serial.println(token);
-#endif
-            return atoi(token);
-        }
-    }
-
-    return -1;
+    return https.getSize();
 }
 
 void SpotifyArduino::parseError()
@@ -1232,7 +1066,7 @@ void SpotifyArduino::parseError()
 #else
     DynamicJsonDocument doc(1000);
 #endif
-    DeserializationError error = deserializeJson(doc, *client);
+    DeserializationError error = deserializeJson(doc, https.getStream());
     if (!error)
     {
         Serial.print(F("getAuthToken error"));
@@ -1254,13 +1088,10 @@ void SpotifyArduino::lateInit(const char *clientId, const char *clientSecret, co
 
 void SpotifyArduino::closeClient()
 {
-    if (client->connected())
-    {
 #ifdef SPOTIFY_DEBUG
-        Serial.println(F("Closing client"));
+        Serial.println(F("Closing connection"));
 #endif
-        client->stop();
-    }
+    https.end();
 }
 
 #ifdef SPOTIFY_DEBUG

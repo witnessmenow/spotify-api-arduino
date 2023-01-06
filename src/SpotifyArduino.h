@@ -40,6 +40,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Client.h>
+#include <WiFiClientSecure.h>
+#include <WiFiClient.h>
+#include <HTTPClient.h>
 
 #ifdef SPOTIFY_PRINT_JSON_PARSE
 #include <StreamUtils.h>
@@ -177,9 +180,9 @@ struct CurrentlyPlaying
 class SpotifyArduino
 {
 public:
-  SpotifyArduino(Client &client);
-  SpotifyArduino(Client &client, char *bearerToken);
-  SpotifyArduino(Client &client, const char *clientId, const char *clientSecret, const char *refreshToken = "");
+  SpotifyArduino(WiFiClient &client);
+  SpotifyArduino(WiFiClient &client, char *bearerToken);
+  SpotifyArduino(WiFiClient &client, const char *clientId, const char *clientSecret, const char *refreshToken = "");
 
   // Auth Methods
   void setRefreshToken(const char *refreshToken);
@@ -223,7 +226,8 @@ public:
   int getDevicesBufferSize = 3000;
   int searchDetailsBufferSize = 3000;
   bool autoTokenRefresh = true;
-  Client *client;
+  HTTPClient https;
+  WiFiClient *client;
   void lateInit(const char *clientId, const char *clientSecret, const char *refreshToken = "");
 
 #ifdef SPOTIFY_DEBUG
@@ -239,8 +243,6 @@ private:
   unsigned int tokenTimeToLiveMs;
   int commonGetImage(char *imageUrl);
   int getContentLength();
-  int getHttpStatusCode();
-  void skipHeaders(bool tossUnexpectedForJSON = true);
   void closeClient();
   void parseError();
   const char *requestAccessTokensBody =
