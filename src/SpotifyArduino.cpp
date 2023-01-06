@@ -811,10 +811,10 @@ int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(Se
         {
 
             uint8_t totalResults = doc["tracks"]["items"].size();
-
+#ifdef SPOTIFY_DEBUG
             Serial.print("Total Results: ");
             Serial.println(totalResults);
-
+#endif
             SearchResult searchResult;
             for (int i = 0; i < totalResults; i++)
             {
