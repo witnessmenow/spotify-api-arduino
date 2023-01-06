@@ -1,3 +1,6 @@
+#ifndef SpotifyArduinoCert_h
+#define SpotifyArduinoCert_h
+
 // Digi Cert Global Root Cert - as of 20/06/2020
 const char *spotify_server_cert = "-----BEGIN CERTIFICATE-----\n"
                                   "MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh\n"
@@ -21,3 +24,5 @@ const char *spotify_server_cert = "-----BEGIN CERTIFICATE-----\n"
                                   "YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk\n"
                                   "CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=\n"
                                   "-----END CERTIFICATE-----\n";
+
+#endif

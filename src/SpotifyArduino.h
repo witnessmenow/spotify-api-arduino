@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 //#define SPOTIFY_PRINT_JSON_PARSE 1
 
 // Use PSRAM for ArduinoJSON
-//#define SPOTIFY_JSON_PSRAM 1
+#define SPOTIFY_JSON_PSRAM 1
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -232,9 +232,9 @@ public:
 
 private:
   char _bearerToken[SPOTIFY_ACCESS_TOKEN_LENGTH + 10]; //10 extra is for "bearer " at the start
-  char *_refreshToken;
-  const char *_clientId;
-  const char *_clientSecret;
+  char *_refreshToken=nullptr;
+  const char *_clientId=nullptr;
+  const char *_clientSecret=nullptr;
   unsigned int timeTokenRefreshed;
   unsigned int tokenTimeToLiveMs;
   int commonGetImage(char *imageUrl);
