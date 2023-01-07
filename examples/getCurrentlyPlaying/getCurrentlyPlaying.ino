@@ -157,6 +157,13 @@ void printCurrentlyPlayingToSerial(CurrentlyPlaying currentlyPlaying)
     Serial.println(currentlyPlaying.albumUri);
     Serial.println();
 
+    if (currentlyPlaying.contextUri != NULL)
+    {
+        Serial.print("Context URI: ");
+        Serial.println(currentlyPlaying.contextUri);
+        Serial.println();
+    }
+
     long progress = currentlyPlaying.progressMs; // duration passed in the song
     long duration = currentlyPlaying.durationMs; // Length of Song
     Serial.print("Elapsed time of song (ms): ");
