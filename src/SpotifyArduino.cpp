@@ -538,9 +538,10 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
         CurrentlyPlaying current;
 
         //Apply Json Filter: https://arduinojson.org/v6/example/filter/
-        StaticJsonDocument<288> filter;
+        StaticJsonDocument<320> filter;
         filter["is_playing"] = true;
         filter["progress_ms"] = true;
+        filter["context"]["uri"] = true;
 
         JsonObject filter_item = filter.createNestedObject("item");
         filter_item["duration_ms"] = true;
@@ -628,6 +629,13 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
 
             current.progressMs = doc["progress_ms"].as<long>();
             current.durationMs = item["duration_ms"].as<long>();
+
+            // context may be null
+            if( ! doc["context"].isNull() ){
+              current.contextUri = doc["context"]["uri"].as<const char *>();
+            } else {
+              current.contextUri = NULL;
+            }
 
             currentlyPlayingCallback(current);
         }

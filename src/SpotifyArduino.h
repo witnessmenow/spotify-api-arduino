@@ -152,6 +152,7 @@ struct CurrentlyPlaying
   bool isPlaying;
   long progressMs;
   long durationMs;
+  const char *contextUri;
 };
 
 typedef void (*processCurrentlyPlaying)(CurrentlyPlaying currentlyPlaying);
