@@ -665,15 +665,15 @@ int SpotifyArduino::getPlayerDetails(std::function<void(PlayerDetails)> playerDe
 
             if (strncmp(repeat_state, "track", 5) == 0)
             {
-                playerDetails.repeateState = repeat_track;
+                playerDetails.repeatState = repeat_track;
             }
             else if (strncmp(repeat_state, "context", 7) == 0)
             {
-                playerDetails.repeateState = repeat_context;
+                playerDetails.repeatState = repeat_context;
             }
             else
             {
-                playerDetails.repeateState = repeat_off;
+                playerDetails.repeatState = repeat_off;
             }
 
             playerDetailsCallback(playerDetails);
