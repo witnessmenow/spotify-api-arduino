@@ -62,7 +62,7 @@ int SpotifyArduino::makeRequestWithBody(const char *type, const char *command, c
     client->print(command);
     client->println(F(" HTTP/1.0"));
 
-    //Headers
+    // Headers
     client->print(F("Host: "));
     client->println(host);
 
@@ -127,7 +127,7 @@ int SpotifyArduino::makeGetRequest(const char *command, const char *authorizatio
     client->print(command);
     client->println(F(" HTTP/1.0"));
 
-    //Headers
+    // Headers
     client->print(F("Host: "));
     client->println(host);
 
@@ -173,8 +173,14 @@ void SpotifyArduino::setRefreshToken(const char *refreshToken)
 bool SpotifyArduino::refreshAccessToken()
 {
     char body[300];
-    sprintf(body, refreshAccessTokensBody, _refreshToken, _clientId, _clientSecret);
-
+    if (this->_useClientSecret)
+    {
+        sprintf(body, refreshAccessTokensBody, _refreshToken, _clientId, _clientSecret);
+    }
+    else
+    {
+        sprintf(body, refreshAccessTokensNoClientSecretBody, _refreshToken, _clientId);
+    }
 #ifdef SPOTIFY_DEBUG
     Serial.println(body);
     printStack();
@@ -265,9 +271,65 @@ bool SpotifyArduino::checkAndRefreshAccessToken()
 
 const char *SpotifyArduino::requestAccessTokens(const char *code, const char *redirectUrl)
 {
-
     char body[500];
     sprintf(body, requestAccessTokensBody, code, redirectUrl, _clientId, _clientSecret);
+
+#ifdef SPOTIFY_DEBUG
+    Serial.println(body);
+#endif
+
+    int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
+    if (statusCode > 0)
+    {
+        skipHeaders();
+    }
+    unsigned long now = millis();
+
+#ifdef SPOTIFY_DEBUG
+    Serial.print("status Code");
+    Serial.println(statusCode);
+#endif
+
+    if (statusCode == 200)
+    {
+        DynamicJsonDocument doc(1000);
+        // Parse JSON object
+#ifndef SPOTIFY_PRINT_JSON_PARSE
+        DeserializationError error = deserializeJson(doc, *client);
+#else
+        ReadLoggingStream loggingStream(*client, Serial);
+        DeserializationError error = deserializeJson(doc, loggingStream);
+#endif
+        if (!error)
+        {
+            sprintf(this->_bearerToken, "Bearer %s", doc["access_token"].as<const char *>());
+            setRefreshToken(doc["refresh_token"].as<const char *>());
+            int tokenTtl = doc["expires_in"];             // Usually 3600 (1 hour)
+            tokenTimeToLiveMs = (tokenTtl * 1000) - 2000; // The 2000 is just to force the token expiry to check if its very close
+            timeTokenRefreshed = now;
+        }
+        else
+        {
+#ifdef SPOTIFY_SERIAL_OUTPUT
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(error.c_str());
+#endif
+        }
+    }
+    else
+    {
+        parseError();
+    }
+
+    closeClient();
+    return _refreshToken;
+}
+
+const char *SpotifyArduino::requestAccessTokensDeviceFlow(const char *deviceCode)
+{
+
+    char body[500];
+    sprintf(body, requestAccessTokensDeviceFlowBody, deviceCode, _clientId);
 
 #ifdef SPOTIFY_DEBUG
     Serial.println(body);
@@ -413,7 +475,7 @@ bool SpotifyArduino::playerControl(char *command, const char *deviceId, const ch
     int statusCode = makePutRequest(command, _bearerToken, body);
 
     closeClient();
-    //Will return 204 if all went well.
+    // Will return 204 if all went well.
     return statusCode == 204;
 }
 
@@ -437,7 +499,7 @@ bool SpotifyArduino::playerNavigate(char *command, const char *deviceId)
     int statusCode = makePostRequest(command, _bearerToken);
 
     closeClient();
-    //Will return 204 if all went well.
+    // Will return 204 if all went well.
     return statusCode == 204;
 }
 
@@ -475,7 +537,7 @@ bool SpotifyArduino::seek(int position, const char *deviceId)
     }
     int statusCode = makePutRequest(command, _bearerToken);
     closeClient();
-    //Will return 204 if all went well.
+    // Will return 204 if all went well.
     return statusCode == 204;
 }
 
@@ -496,7 +558,7 @@ bool SpotifyArduino::transferPlayback(const char *deviceId, bool play)
     }
     int statusCode = makePutRequest(SPOTIFY_PLAYER_ENDPOINT, _bearerToken, body);
     closeClient();
-    //Will return 204 if all went well.
+    // Will return 204 if all went well.
     return statusCode == 204;
 }
 
@@ -537,7 +599,7 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
     {
         CurrentlyPlaying current;
 
-        //Apply Json Filter: https://arduinojson.org/v6/example/filter/
+        // Apply Json Filter: https://arduinojson.org/v6/example/filter/
         StaticJsonDocument<320> filter;
         filter["is_playing"] = true;
         filter["progress_ms"] = true;
@@ -631,10 +693,13 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
             current.durationMs = item["duration_ms"].as<long>();
 
             // context may be null
-            if( ! doc["context"].isNull() ){
-              current.contextUri = doc["context"]["uri"].as<const char *>();
-            } else {
-              current.contextUri = NULL;
+            if (!doc["context"].isNull())
+            {
+                current.contextUri = doc["context"]["uri"].as<const char *>();
+            }
+            else
+            {
+                current.contextUri = NULL;
             }
 
             currentlyPlayingCallback(current);
@@ -821,7 +886,7 @@ int SpotifyArduino::getDevices(processDevices devicesCallback)
 
                 if (!devicesCallback(spotifyDevice, i, totalDevices))
                 {
-                    //User has indicated they are finished.
+                    // User has indicated they are finished.
                     break;
                 }
             }
@@ -889,14 +954,14 @@ int SpotifyArduino::searchForSong(String query, int limit, processSearch searchC
             SearchResult searchResult;
             for (int i = 0; i < totalResults; i++)
             {
-                //Polling track information
+                // Polling track information
                 JsonObject result = doc["tracks"]["items"][i];
                 searchResult.trackUri = result["uri"].as<const char *>();
                 searchResult.trackName = result["name"].as<const char *>();
                 searchResult.albumUri = result["album"]["uri"].as<const char *>();
                 searchResult.albumName = result["album"]["name"].as<const char *>();
 
-                //Pull artist Information for the result
+                // Pull artist Information for the result
                 uint8_t totalArtists = result["artists"].size();
                 searchResult.numArtists = totalArtists;
 
@@ -922,12 +987,12 @@ int SpotifyArduino::searchForSong(String query, int limit, processSearch searchC
                     searchResult.albumImages[j] = image;
                 }
 
-                //Serial.println(searchResult.trackName);
+                // Serial.println(searchResult.trackName);
                 results[i] = searchResult;
 
                 if (i >= limit || !searchCallback(searchResult, i, totalResults))
                 {
-                    //Break at the limit or when indicated
+                    // Break at the limit or when indicated
                     break;
                 }
             }
@@ -1058,7 +1123,7 @@ bool SpotifyArduino::getImage(char *imageUrl, Stream *file)
 
     closeClient();
 
-    return (totalLength > 0); //Probably could be improved!
+    return (totalLength > 0); // Probably could be improved!
 }
 
 bool SpotifyArduino::getImage(char *imageUrl, uint8_t **image, int *imageLength)
@@ -1117,7 +1182,7 @@ bool SpotifyArduino::getImage(char *imageUrl, uint8_t **image, int *imageLength)
 
     closeClient();
 
-    return (totalLength > 0); //Probably could be improved!
+    return (totalLength > 0); // Probably could be improved!
 }
 
 int SpotifyArduino::getContentLength()
@@ -1198,7 +1263,7 @@ int SpotifyArduino::getHttpStatusCode()
 
 void SpotifyArduino::parseError()
 {
-    //This method doesn't currently do anything other than print
+    // This method doesn't currently do anything other than print
 #ifdef SPOTIFY_SERIAL_OUTPUT
     DynamicJsonDocument doc(1000);
     DeserializationError error = deserializeJson(doc, *client);
@@ -1216,8 +1281,16 @@ void SpotifyArduino::parseError()
 
 void SpotifyArduino::lateInit(const char *clientId, const char *clientSecret, const char *refreshToken)
 {
+    this->_useClientSecret = true;
     this->_clientId = clientId;
     this->_clientSecret = clientSecret;
+    setRefreshToken(refreshToken);
+}
+
+void SpotifyArduino::lateInit(const char *clientId, const char *refreshToken)
+{
+    this->_useClientSecret = false;
+    this->_clientId = clientId;
     setRefreshToken(refreshToken);
 }
 
