@@ -61,7 +61,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_DEVICE_NAME_CHAR_LENGTH 80
 #define SPOTIFY_DEVICE_TYPE_CHAR_LENGTH 30
 
-#define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing"
+#define SPOTIFY_CURRENTLY_PLAYING_ENDPOINT "/v1/me/player/currently-playing?additional_types=episode"
 
 #define SPOTIFY_PLAYER_ENDPOINT "/v1/me/player"
 #define SPOTIFY_DEVICES_ENDPOINT "/v1/me/player/devices"
@@ -91,6 +91,13 @@ enum RepeatOptions
   repeat_track,
   repeat_context,
   repeat_off
+};
+
+enum SpotifyPlayingType
+{
+  track,
+  episode,
+  other
 };
 
 struct SpotifyImage
@@ -153,6 +160,7 @@ struct CurrentlyPlaying
   long progressMs;
   long durationMs;
   const char *contextUri;
+  SpotifyPlayingType currentlyPlayingType;
 };
 
 typedef void (*processCurrentlyPlaying)(CurrentlyPlaying currentlyPlaying);
@@ -195,7 +203,7 @@ public:
   bool playerNavigate(char *command, const char *deviceId = "");
   bool seek(int position, const char *deviceId = "");
   bool transferPlayback(const char *deviceId, bool play = false);
-    
+
   //Search
   int searchForSong(String query, int limit, processSearch searchCallback, SearchResult results[]);
 

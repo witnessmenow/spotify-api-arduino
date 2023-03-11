@@ -502,11 +502,11 @@ bool SpotifyArduino::transferPlayback(const char *deviceId, bool play)
 
 int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlayingCallback, const char *market)
 {
-    char command[50] = SPOTIFY_CURRENTLY_PLAYING_ENDPOINT;
+    char command[75] = SPOTIFY_CURRENTLY_PLAYING_ENDPOINT;
     if (market[0] != 0)
     {
         char marketBuff[15];
-        sprintf(marketBuff, "?market=%s", market);
+        sprintf(marketBuff, "&market=%s", market);
         strcat(command, marketBuff);
     }
 
@@ -538,8 +538,9 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
         CurrentlyPlaying current;
 
         //Apply Json Filter: https://arduinojson.org/v6/example/filter/
-        StaticJsonDocument<320> filter;
+        StaticJsonDocument<464> filter;
         filter["is_playing"] = true;
+        filter["currently_playing_type"] = true;
         filter["progress_ms"] = true;
         filter["context"]["uri"] = true;
 
@@ -561,6 +562,16 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
         filter_item_album_images_0["width"] = true;
         filter_item_album_images_0["url"] = true;
 
+        // Podcast filters
+        JsonObject filter_item_show = filter_item.createNestedObject("show");
+        filter_item_show["name"] = true;
+        filter_item_show["uri"] = true;
+
+        JsonObject filter_item_images_0 = filter_item["images"].createNestedObject();
+        filter_item_images_0["height"] = true;
+        filter_item_images_0["width"] = true;
+        filter_item_images_0["url"] = true;
+
         // Allocate DynamicJsonDocument
         DynamicJsonDocument doc(bufferSize);
 
@@ -578,52 +589,7 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
 #endif
             JsonObject item = doc["item"];
 
-            int numArtists = item["artists"].size();
-            if (numArtists > SPOTIFY_MAX_NUM_ARTISTS)
-            {
-                numArtists = SPOTIFY_MAX_NUM_ARTISTS;
-            }
-            current.numArtists = numArtists;
-
-            for (int i = 0; i < current.numArtists; i++)
-            {
-                current.artists[i].artistName = item["artists"][i]["name"].as<const char *>();
-                current.artists[i].artistUri = item["artists"][i]["uri"].as<const char *>();
-            }
-
-            current.albumName = item["album"]["name"].as<const char *>();
-            current.albumUri = item["album"]["uri"].as<const char *>();
-
-            JsonArray images = item["album"]["images"];
-
-            // Images are returned in order of width, so last should be smallest.
-            int numImages = images.size();
-            int startingIndex = 0;
-            if (numImages > SPOTIFY_NUM_ALBUM_IMAGES)
-            {
-                startingIndex = numImages - SPOTIFY_NUM_ALBUM_IMAGES;
-                current.numImages = SPOTIFY_NUM_ALBUM_IMAGES;
-            }
-            else
-            {
-                current.numImages = numImages;
-            }
-#ifdef SPOTIFY_DEBUG
-            Serial.print(F("Num Images: "));
-            Serial.println(current.numImages);
-            Serial.println(numImages);
-#endif
-
-            for (int i = 0; i < current.numImages; i++)
-            {
-                int adjustedIndex = startingIndex + i;
-                current.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
-                current.albumImages[i].width = images[adjustedIndex]["width"].as<int>();
-                current.albumImages[i].url = images[adjustedIndex]["url"].as<const char *>();
-            }
-
-            current.trackName = item["name"].as<const char *>();
-            current.trackUri = item["uri"].as<const char *>();
+            const char *currently_playing_type = doc["currently_playing_type"];
 
             current.isPlaying = doc["is_playing"].as<bool>();
 
@@ -631,10 +597,123 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
             current.durationMs = item["duration_ms"].as<long>();
 
             // context may be null
-            if( ! doc["context"].isNull() ){
-              current.contextUri = doc["context"]["uri"].as<const char *>();
-            } else {
-              current.contextUri = NULL;
+            if (!doc["context"].isNull())
+            {
+                current.contextUri = doc["context"]["uri"].as<const char *>();
+            }
+            else
+            {
+                current.contextUri = NULL;
+            }
+
+            // Check currently playing type
+            if (strcmp(currently_playing_type, "track") == 0)
+            {
+                current.currentlyPlayingType = track;
+            }
+            else if (strcmp(currently_playing_type, "episode") == 0)
+            {
+                current.currentlyPlayingType = episode;
+            }
+            else
+            {
+                current.currentlyPlayingType = other;
+            }
+
+            // If it's a song/track
+            if (current.currentlyPlayingType == track)
+            {
+                int numArtists = item["artists"].size();
+                if (numArtists > SPOTIFY_MAX_NUM_ARTISTS)
+                {
+                    numArtists = SPOTIFY_MAX_NUM_ARTISTS;
+                }
+                current.numArtists = numArtists;
+
+                for (int i = 0; i < current.numArtists; i++)
+                {
+                    current.artists[i].artistName = item["artists"][i]["name"].as<const char *>();
+                    current.artists[i].artistUri = item["artists"][i]["uri"].as<const char *>();
+                }
+
+                current.albumName = item["album"]["name"].as<const char *>();
+                current.albumUri = item["album"]["uri"].as<const char *>();
+
+                JsonArray images = item["album"]["images"];
+
+                // Images are returned in order of width, so last should be smallest.
+                int numImages = images.size();
+                int startingIndex = 0;
+                if (numImages > SPOTIFY_NUM_ALBUM_IMAGES)
+                {
+                    startingIndex = numImages - SPOTIFY_NUM_ALBUM_IMAGES;
+                    current.numImages = SPOTIFY_NUM_ALBUM_IMAGES;
+                }
+                else
+                {
+                    current.numImages = numImages;
+                }
+#ifdef SPOTIFY_DEBUG
+                Serial.print(F("Num Images: "));
+                Serial.println(current.numImages);
+                Serial.println(numImages);
+#endif
+
+                for (int i = 0; i < current.numImages; i++)
+                {
+                    int adjustedIndex = startingIndex + i;
+                    current.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
+                    current.albumImages[i].width = images[adjustedIndex]["width"].as<int>();
+                    current.albumImages[i].url = images[adjustedIndex]["url"].as<const char *>();
+                }
+
+                current.trackName = item["name"].as<const char *>();
+                current.trackUri = item["uri"].as<const char *>();
+            }
+            else if (current.currentlyPlayingType == episode) // Podcast
+            {
+                current.numArtists = 1;
+
+                // Save Podcast as the "track"
+                current.trackName = item["name"].as<const char *>();
+                current.trackUri = item["uri"].as<const char *>();
+
+                // Save Show name as the "artist"
+                current.artists[0].artistName = item["show"]["name"].as<const char *>();
+                current.artists[0].artistUri = item["show"]["uri"].as<const char *>();
+
+                // Leave "album" name blank
+                char blank[1] = "";
+                current.albumName = blank;
+                current.albumUri = blank;
+
+                // Save the episode images as the "album art"
+                JsonArray images = item["images"];
+                // Images are returned in order of width, so last should be smallest.
+                int numImages = images.size();
+                int startingIndex = 0;
+                if (numImages > SPOTIFY_NUM_ALBUM_IMAGES)
+                {
+                    startingIndex = numImages - SPOTIFY_NUM_ALBUM_IMAGES;
+                    current.numImages = SPOTIFY_NUM_ALBUM_IMAGES;
+                }
+                else
+                {
+                    current.numImages = numImages;
+                }
+#ifdef SPOTIFY_DEBUG
+                Serial.print(F("Num Images: "));
+                Serial.println(current.numImages);
+                Serial.println(numImages);
+#endif
+
+                for (int i = 0; i < current.numImages; i++)
+                {
+                    int adjustedIndex = startingIndex + i;
+                    current.albumImages[i].height = images[adjustedIndex]["height"].as<int>();
+                    current.albumImages[i].width = images[adjustedIndex]["width"].as<int>();
+                    current.albumImages[i].url = images[adjustedIndex]["url"].as<const char *>();
+                }
             }
 
             currentlyPlayingCallback(current);
