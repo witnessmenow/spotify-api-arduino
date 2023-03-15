@@ -56,8 +56,10 @@ int SpotifyArduino::makePutRequest(const char *command, const char *authorizatio
 
 int SpotifyArduino::makePostRequest(const char *command, const char *authorization, const char *body, const char *contentType, const char *host)
 {
+    ESP_LOGI(__func__, "command: %s, body: %s, contentType: %s, host: %s", command, body, contentType, host);
     https.begin(*client, host, 443, command, true);
-    https.useHTTP10(true);
+    ESP_LOGI(__func__, "https.begin() done");
+    //https.useHTTP10(true);
     https.addHeader("Host", host);
     https.addHeader("Accept", "application/json");
     https.addHeader("Content-Type", contentType);
@@ -66,6 +68,7 @@ int SpotifyArduino::makePostRequest(const char *command, const char *authorizati
         https.addHeader("Authorization", authorization);
     }
     https.addHeader("Cache-Control", "no-cache");
+    ESP_LOGI(__func__, "https.addHeader() done");
     return https.POST(body);
 }
 
@@ -104,7 +107,7 @@ bool SpotifyArduino::refreshAccessToken()
     sprintf(body, refreshAccessTokensBody, _refreshToken, _clientId, _clientSecret);
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(body);
+    ESP_LOGI(__func__, "%s", body);
     printStack();
 #endif
 
@@ -112,8 +115,7 @@ bool SpotifyArduino::refreshAccessToken()
     unsigned long now = millis();
 
 #ifdef SPOTIFY_DEBUG
-    Serial.print("status Code");
-    Serial.println(statusCode);
+    ESP_LOGI(__func__, "status code: %d", statusCode);
 #endif
 
     bool refreshed = false;
@@ -144,7 +146,7 @@ bool SpotifyArduino::refreshAccessToken()
         if (!error)
         {
 #ifdef SPOTIFY_DEBUG
-            Serial.println(F("No JSON error, dealing with response"));
+            ESP_LOGI(__func__, "No JSON error, dealing with response");
 #endif
             const char *accessToken = doc["access_token"].as<const char *>();
             if (accessToken != NULL && (SPOTIFY_ACCESS_TOKEN_LENGTH >= strlen(accessToken)))
@@ -158,16 +160,14 @@ bool SpotifyArduino::refreshAccessToken()
             else
             {
 #ifdef SPOTIFY_SERIAL_OUTPUT
-                Serial.print(F("Problem with access_token (too long or null): "));
-                Serial.println(accessToken);
+                ESP_LOGI(__func__, "Problem with access_token (too long or null): %s", accessToken);
 #endif
             }
         }
         else
         {
 #ifdef SPOTIFY_SERIAL_OUTPUT
-            Serial.print(F("deserializeJson() failed with code "));
-            Serial.println(error.c_str());
+            ESP_LOGI(__func__, "deserializeJson() failed with code %s", error.c_str());
 #endif
         }
     }
@@ -186,7 +186,7 @@ bool SpotifyArduino::checkAndRefreshAccessToken()
     if (timeSinceLastRefresh >= tokenTimeToLiveMs)
     {
 #ifdef SPOTIFY_SERIAL_OUTPUT
-        Serial.println("Refresh of the Access token is due, doing that now.");
+        ESP_LOGI(__func__, "Refresh of the Access token is due, doing that now.");
 #endif
         return refreshAccessToken();
     }
@@ -202,15 +202,14 @@ const char *SpotifyArduino::requestAccessTokens(const char *code, const char *re
     sprintf(body, requestAccessTokensBody, code, redirectUrl, _clientId, _clientSecret);
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(body);
+    ESP_LOGI(__func__, "%s", body);
 #endif
 
     int statusCode = makePostRequest(SPOTIFY_TOKEN_ENDPOINT, NULL, body, "application/x-www-form-urlencoded", SPOTIFY_ACCOUNTS_HOST);
     unsigned long now = millis();
 
 #ifdef SPOTIFY_DEBUG
-    Serial.print("status Code");
-    Serial.println(statusCode);
+    ESP_LOGI(__func__, "status Code %d", statusCode);
 #endif
 
     if (statusCode == 200)
@@ -238,8 +237,7 @@ const char *SpotifyArduino::requestAccessTokens(const char *code, const char *re
         else
         {
 #ifdef SPOTIFY_SERIAL_OUTPUT
-            Serial.print(F("deserializeJson() failed with code "));
-            Serial.println(error.c_str());
+            ESP_LOGI(__func__, "deserializeJson() failed with code %s", error.c_str());
 #endif
         }
     }
@@ -334,8 +332,8 @@ bool SpotifyArduino::playerControl(char *command, const char *deviceId, const ch
     }
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(command);
-    Serial.println(body);
+    ESP_LOGI(__func__, "command: %s", command);
+    ESP_LOGI(__func__, "body: %s", body);
 #endif
 
     if (autoTokenRefresh)
@@ -359,7 +357,7 @@ bool SpotifyArduino::playerNavigate(char *command, const char *deviceId)
     }
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(command);
+    ESP_LOGI(__func__, "Command: %s", command);
 #endif
 
     if (autoTokenRefresh)
@@ -397,7 +395,7 @@ bool SpotifyArduino::seek(int position, const char *deviceId)
     }
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(command);
+    ESP_LOGI(__func__, "Command: %s", command);
     printStack();
 #endif
 
@@ -417,8 +415,8 @@ bool SpotifyArduino::transferPlayback(const char *deviceId, bool play)
     sprintf(body, "{\"device_ids\":[\"%s\"],\"play\":\"%s\"}", deviceId, (play ? "true" : "false"));
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(SPOTIFY_PLAYER_ENDPOINT);
-    Serial.println(body);
+    ESP_LOGI(__func__, SPOTIFY_PLAYER_ENDPOINT);
+    ESP_LOGI(__func__, "Body: %s", body);
     printStack();
 #endif
 
@@ -443,7 +441,7 @@ int SpotifyArduino::getCurrentlyPlaying(std::function<void(CurrentlyPlaying)> cu
     }
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(command);
+    ESP_LOGI(__func__, "Command: %s", command);
     printStack();
 #endif
 
@@ -456,8 +454,7 @@ int SpotifyArduino::getCurrentlyPlaying(std::function<void(CurrentlyPlaying)> cu
     }
     int statusCode = makeGetRequest(command, _bearerToken);
 #ifdef SPOTIFY_DEBUG
-    Serial.print("Status Code: ");
-    Serial.println(statusCode);
+    ESP_LOGI(__func__, "Status Code: %d", statusCode);
     printStack();
 #endif
     if (statusCode == 200)
@@ -543,9 +540,8 @@ int SpotifyArduino::getCurrentlyPlaying(std::function<void(CurrentlyPlaying)> cu
                 current.numImages = numImages;
             }
 #ifdef SPOTIFY_DEBUG
-            Serial.print(F("Num Images: "));
-            Serial.println(current.numImages);
-            Serial.println(numImages);
+            ESP_LOGI(__func__, "Num Images: %d", current.numImages);
+            ESP_LOGI(__func__, "%d", numImages);
 #endif
 
             for (int i = 0; i < current.numImages; i++)
@@ -569,8 +565,7 @@ int SpotifyArduino::getCurrentlyPlaying(std::function<void(CurrentlyPlaying)> cu
         else
         {
 #ifdef SPOTIFY_SERIAL_OUTPUT
-            Serial.print(F("deserializeJson() failed with code "));
-            Serial.println(error.c_str());
+            ESP_LOGI(__func__, "deserializeJson() failed with code %s", error.c_str());
 #endif
             statusCode = -1;
         }
@@ -591,7 +586,7 @@ int SpotifyArduino::getPlayerDetails(std::function<void(PlayerDetails)> playerDe
     }
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(command);
+    ESP_LOGI(__func__, "Command: %s", command);
     printStack();
 #endif
 
@@ -604,8 +599,7 @@ int SpotifyArduino::getPlayerDetails(std::function<void(PlayerDetails)> playerDe
 
     int statusCode = makeGetRequest(command, _bearerToken);
 #ifdef SPOTIFY_DEBUG
-    Serial.print("Status Code: ");
-    Serial.println(statusCode);
+    ESP_LOGI(__func__, "Status Code: %d", statusCode);
 #endif
     if (statusCode == 200)
     {
@@ -681,8 +675,7 @@ int SpotifyArduino::getPlayerDetails(std::function<void(PlayerDetails)> playerDe
         else
         {
 #ifdef SPOTIFY_SERIAL_OUTPUT
-            Serial.print(F("deserializeJson() failed with code "));
-            Serial.println(error.c_str());
+            ESP_LOGI(__func__, "deserializeJson() failed with code %s", error.c_str());
 #endif
             statusCode = -1;
         }
@@ -696,7 +689,7 @@ int SpotifyArduino::getDevices(std::function<bool(SpotifyDevice device, int inde
 {
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(SPOTIFY_DEVICES_ENDPOINT);
+    ESP_LOGI(__func__, SPOTIFY_DEVICES_ENDPOINT);
     printStack();
 #endif
 
@@ -709,8 +702,7 @@ int SpotifyArduino::getDevices(std::function<bool(SpotifyDevice device, int inde
 
     int statusCode = makeGetRequest(SPOTIFY_DEVICES_ENDPOINT, _bearerToken);
 #ifdef SPOTIFY_DEBUG
-    Serial.print("Status Code: ");
-    Serial.println(statusCode);
+    ESP_LOGI(__func__, "Status Code: %d", statusCode);
 #endif
 
     if (statusCode == 200)
@@ -758,8 +750,7 @@ int SpotifyArduino::getDevices(std::function<bool(SpotifyDevice device, int inde
         else
         {
 #ifdef SPOTIFY_SERIAL_OUTPUT
-            Serial.print(F("deserializeJson() failed with code "));
-            Serial.println(error.c_str());
+            ESP_LOGI(__func__, "deserializeJson() failed with code %s", error.c_str());
 #endif
             statusCode = -1;
         }
@@ -773,7 +764,7 @@ int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(Se
 {
 
 #ifdef SPOTIFY_DEBUG
-    Serial.println(SPOTIFY_SEARCH_ENDPOINT);
+    ESP_LOGI(__func__, SPOTIFY_SEARCH_ENDPOINT);
     printStack();
 #endif
 
@@ -786,8 +777,7 @@ int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(Se
 
     int statusCode = makeGetRequest((SPOTIFY_SEARCH_ENDPOINT + query + "&limit=" + limit).c_str(), _bearerToken);
 #ifdef SPOTIFY_DEBUG
-    Serial.print("Status Code: ");
-    Serial.println(statusCode);
+    ESP_LOGI(__func__, "Status Code: %d", statusCode);
 #endif
 
     if (statusCode == 200)
@@ -812,8 +802,7 @@ int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(Se
 
             uint8_t totalResults = doc["tracks"]["items"].size();
 #ifdef SPOTIFY_DEBUG
-            Serial.print("Total Results: ");
-            Serial.println(totalResults);
+            ESP_LOGI(__func__, "Total Results: %d", totalResults);
 #endif
             SearchResult searchResult;
             for (int i = 0; i < totalResults; i++)
@@ -851,7 +840,7 @@ int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(Se
                     searchResult.albumImages[j] = image;
                 }
 
-                //Serial.println(searchResult.trackName);
+                //ESP_LOGI(__func__, searchResult.trackName);
                 results[i] = searchResult;
 
                 if (i >= limit || !searchCallback(searchResult, i, totalResults))
@@ -864,8 +853,7 @@ int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(Se
         else
         {
 #ifdef SPOTIFY_SERIAL_OUTPUT
-            Serial.print(F("deserializeJson() failed with code "));
-            Serial.println(error.c_str());
+            ESP_LOGI(__func__, "deserializeJson() failed with code %s", error.c_str());
 #endif
             statusCode = -1;
         }
@@ -878,8 +866,7 @@ int SpotifyArduino::searchForSong(String query, int limit, std::function<bool(Se
 int SpotifyArduino::commonGetImage(char *imageUrl)
 {
 #ifdef SPOTIFY_DEBUG
-    Serial.print(F("Parsing image URL: "));
-    Serial.println(imageUrl);
+    ESP_LOGI(__func__, "Parsing image URL: %s", imageUrl);
 #endif
 
     uint8_t lengthOfString = strlen(imageUrl);
@@ -891,9 +878,8 @@ int SpotifyArduino::commonGetImage(char *imageUrl)
     if (strncmp(imageUrl, "https://", 8) != 0)
     {
 #ifdef SPOTIFY_SERIAL_OUTPUT
-        Serial.print(F("Url not in expected format: "));
-        Serial.println(imageUrl);
-        Serial.println("(expected it to start with \"https://\")");
+        ESP_LOGI(__func__, "Url not in expected format: %s", imageUrl);
+        ESP_LOGI(__func__, "(expected it to start with \"https://\")");
 #endif
         return false;
     }
@@ -913,24 +899,15 @@ int SpotifyArduino::commonGetImage(char *imageUrl)
     host[hostLength] = '\0';
 
 #ifdef SPOTIFY_DEBUG
-
-    Serial.print(F("host: "));
-    Serial.println(host);
-
-    Serial.print(F("len:host:"));
-    Serial.println(hostLength);
-
-    Serial.print(F("path: "));
-    Serial.println(path);
-
-    Serial.print(F("len:path: "));
-    Serial.println(strlen(path));
+    ESP_LOGI(__func__, "host: %s", host);
+    ESP_LOGI(__func__, "len:host: %d", hostLength);
+    ESP_LOGI(__func__, "path: %s", path);
+    ESP_LOGI(__func__, "len:path: %d", strlen(path));
 #endif
 
     int statusCode = makeGetRequest(path, NULL, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8", host);
 #ifdef SPOTIFY_DEBUG
-    Serial.print(F("statusCode: "));
-    Serial.println(statusCode);
+    ESP_LOGI(__func__, "Status Code: %d", statusCode);
 #endif
     if (statusCode == 200)
     {
@@ -946,8 +923,7 @@ bool SpotifyArduino::getImage(char *imageUrl, Stream *file)
     int totalLength = commonGetImage(imageUrl);
 
 #ifdef SPOTIFY_DEBUG
-    Serial.print(F("file length: "));
-    Serial.println(totalLength);
+    ESP_LOGI(__func__, "file length: %i", totalLength);
 #endif
     if (totalLength > 0)
     {
@@ -980,7 +956,7 @@ bool SpotifyArduino::getImage(char *imageUrl, Stream *file)
         }
 // ---------
 #ifdef SPOTIFY_DEBUG
-        Serial.println(F("Finished getting image"));
+        ESP_LOGI(__func__, "Finished getting image");
 #endif
     }
 
@@ -994,8 +970,7 @@ bool SpotifyArduino::getImage(char *imageUrl, uint8_t **image, int *imageLength)
     int totalLength = commonGetImage(imageUrl);
 
 #ifdef SPOTIFY_DEBUG
-    Serial.print(F("file length: "));
-    Serial.println(totalLength);
+    ESP_LOGI(__func__, "file length: %d", totalLength);
 #endif
     if (totalLength > 0)
     {
@@ -1006,7 +981,7 @@ bool SpotifyArduino::getImage(char *imageUrl, uint8_t **image, int *imageLength)
         int amountRead = 0;
 
 #ifdef SPOTIFY_DEBUG
-        Serial.println(F("Fetching Image"));
+        ESP_LOGI(__func__, "Fetching Image");
 #endif
 
         // This section of code is inspired but the "Web_Jpg"
@@ -1038,7 +1013,7 @@ bool SpotifyArduino::getImage(char *imageUrl, uint8_t **image, int *imageLength)
         }
 // ---------
 #ifdef SPOTIFY_DEBUG
-        Serial.println(F("Finished getting image"));
+        ESP_LOGI(__func__, "Finished getting image");
 #endif
     }
 
@@ -1050,8 +1025,7 @@ bool SpotifyArduino::getImage(char *imageUrl, uint8_t **image, int *imageLength)
 int SpotifyArduino::getContentLength()
 {
 #ifdef SPOTIFY_DEBUG
-        Serial.print(F("Content-Length: "));
-        Serial.println(https.getSize());
+        ESP_LOGI(__func__, "Content-Length: %d", https.getSize());
 #endif
 
     return https.getSize();
@@ -1069,12 +1043,12 @@ void SpotifyArduino::parseError()
     DeserializationError error = deserializeJson(doc, https.getStream());
     if (!error)
     {
-        Serial.print(F("getAuthToken error"));
+        ESP_LOGI(__func__, "getAuthToken error");
         serializeJson(doc, Serial);
     }
     else
     {
-        Serial.print(F("Could not parse error"));
+        ESP_LOGI(__func__, "Could not parse error");
     }
 #endif
 }
@@ -1089,7 +1063,7 @@ void SpotifyArduino::lateInit(const char *clientId, const char *clientSecret, co
 void SpotifyArduino::closeClient()
 {
 #ifdef SPOTIFY_DEBUG
-        Serial.println(F("Closing connection"));
+        ESP_LOGI(__func__, "Closing connection");
 #endif
     https.end();
 }
@@ -1098,7 +1072,6 @@ void SpotifyArduino::closeClient()
 void SpotifyArduino::printStack()
 {
     char stack;
-    Serial.print(F("stack size "));
-    Serial.println(stack_start - &stack);
+    ESP_LOGI(__func__, "stack size %d", stack_start - &stack);
 }
 #endif
