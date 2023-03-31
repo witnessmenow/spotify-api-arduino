@@ -121,6 +121,9 @@ void setup()
   {
     Serial.println("Failed to get access tokens");
   }
+  
+	// If you get an out of memory error, you can increase the search buffer size, default is 3000
+	// spotify.searchDetailsBufferSize = 3000;
 }
 
 bool getResultsCallback(SearchResult result, int index, int numResults)
