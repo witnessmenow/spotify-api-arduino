@@ -45,11 +45,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #define SPOTIFY_HOST "api.spotify.com"
 #define SPOTIFY_ACCOUNTS_HOST "accounts.spotify.com"
 
-// Fingerprint for "*.spotify.com", correct as of March 31, 2023
-#define SPOTIFY_FINGERPRINT "9F 3F 7B C6 26 4C 97 06 A2 D4 D7 B2 35 45 D9 AA 8D BD CD 4D"
+// Fingerprint for "*.spotify.com", correct as of March 14, 2024
+#define SPOTIFY_FINGERPRINT "69 2B 36 29 F0 B5 FC 1B A3 57 A6 76 E6 92 EF 30 14 22 34 6A"
 
-// Fingerprint for "*.scdn.co", correct as of March 31, 2023
-#define SPOTIFY_IMAGE_SERVER_FINGERPRINT "8B 24 D0 B7 12 AC DB 03 75 09 45 95 24 FF BE D8 35 E6 EB DF"
+// Fingerprint for "*.scdn.co", correct as of March 14, 2024
+#define SPOTIFY_IMAGE_SERVER_FINGERPRINT "0A 0F 59 45 2C FF 37 3C FE 37 27 AD 32 64 59 A9 5A B6 2F 30"
 
 #define SPOTIFY_TIMEOUT 2000
 
