@@ -1025,6 +1025,89 @@ int SpotifyArduino::searchForSong(String query, int limit, processSearch searchC
     return statusCode;
 }
 
+int SpotifyArduino::getPlaylist(String query, int limit, String market, processPlaylist playlistCallback, PlaylistResult results[])
+{
+
+#ifdef SPOTIFY_DEBUG
+    Serial.println(SPOTIFY_PLAYLIST_ENDPOINT);
+    printStack();
+#endif
+
+    // Get from https://arduinojson.org/v6/assistant/
+    const size_t bufferSize = playlistDetailsBufferSize;
+    if (autoTokenRefresh)
+    {
+        checkAndRefreshAccessToken();
+    }
+
+    int statusCode = makeGetRequest((SPOTIFY_PLAYLIST_ENDPOINT + query + "?market=" + market + "&fields=tracks.items%28track%28name%2Curi%2Calbum%28name%2Curi%29%2Cartists%28name%2Curi%29%29").c_str(), _bearerToken);
+#ifdef SPOTIFY_DEBUG
+    Serial.print("Status Code: ");
+    Serial.println(statusCode);
+#endif
+    if (statusCode > 0)
+    {
+        skipHeaders();
+    }
+
+    if (statusCode == 200)
+    {
+
+        // Allocate DynamicJsonDocument
+        DynamicJsonDocument doc(bufferSize);
+
+        // Parse JSON object
+#ifndef SPOTIFY_PRINT_JSON_PARSE
+        DeserializationError error = deserializeJson(doc, *client);
+#else
+        ReadLoggingStream loggingStream(*client, Serial);
+        DeserializationError error = deserializeJson(doc, loggingStream);
+#endif
+	//serializeJsonPretty(doc, Serial);
+        if (!error)
+        {
+
+            uint8_t totalResults = doc["tracks"]["items"].size();
+
+            Serial.print("Total Results: ");
+            Serial.println(totalResults);
+
+            PlaylistResult playlistResult;
+            for (int i = 0; i < totalResults; i++)
+            {
+                //Polling track information
+                JsonObject result = doc["tracks"]["items"][i]["track"];
+                playlistResult.trackUri = result["uri"].as<const char *>();
+                playlistResult.trackName = result["name"].as<const char *>();
+                playlistResult.albumUri = result["album"]["uri"].as<const char *>();
+                playlistResult.albumName = result["album"]["name"].as<const char *>();
+
+		playlistResult.artistName = result["artists"][0]["name"];
+		playlistResult.artistUri = result["artists"][0]["uri"];
+
+                results[i] = playlistResult;
+
+                if (i >= limit-1 || !playlistCallback(playlistResult, i, totalResults))
+                {
+                    //Break at the limit or when indicated
+                    break;
+                }
+            }
+        }
+        else
+        {
+#ifdef SPOTIFY_SERIAL_OUTPUT
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(error.c_str());
+#endif
+            statusCode = -1;
+        }
+    }
+
+    closeClient();
+    return statusCode;
+}
+
 int SpotifyArduino::commonGetImage(char *imageUrl)
 {
 #ifdef SPOTIFY_DEBUG

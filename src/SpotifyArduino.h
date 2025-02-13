@@ -78,11 +78,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 #define SPOTIFY_SEEK_ENDPOINT "/v1/me/player/seek"
 
+#define SPOTIFY_PLAYLIST_ENDPOINT "/v1/playlists/"
+
 #define SPOTIFY_TOKEN_ENDPOINT "/api/token"
 
 #define SPOTIFY_NUM_ALBUM_IMAGES 3 // Max spotify returns is 3, but the third one is probably too big for an ESP
 
-#define SPOTIFY_MAX_NUM_ARTISTS 5
+#define SPOTIFY_MAX_NUM_ARTISTS 5 
 
 #define SPOTIFY_ACCESS_TOKEN_LENGTH 309
 
@@ -146,6 +148,16 @@ struct SearchResult
   int numImages;
 };
 
+struct PlaylistResult
+{
+  const char *albumName;
+  const char *albumUri;
+  const char *trackName;
+  const char *trackUri;
+  const char *artistName;
+  const char *artistUri;
+};
+
 struct CurrentlyPlaying
 {
   SpotifyArtist artists[SPOTIFY_MAX_NUM_ARTISTS];
@@ -167,6 +179,8 @@ typedef void (*processCurrentlyPlaying)(CurrentlyPlaying currentlyPlaying);
 typedef void (*processPlayerDetails)(PlayerDetails playerDetails);
 typedef bool (*processDevices)(SpotifyDevice device, int index, int numDevices);
 typedef bool (*processSearch)(SearchResult result, int index, int numResults);
+typedef bool (*processPlaylist)(PlaylistResult result, int index, int numResults);
+
 
 class SpotifyArduino
 {
@@ -207,6 +221,9 @@ public:
   //Search
   int searchForSong(String query, int limit, processSearch searchCallback, SearchResult results[]);
 
+  //Playlist
+  int getPlaylist(String query, int limit, String market, processPlaylist playlistCallback, PlaylistResult results[]);
+
   // Image methods
   bool getImage(char *imageUrl, Stream *file);
   bool getImage(char *imageUrl, uint8_t **image, int *imageLength);
@@ -216,6 +233,7 @@ public:
   int playerDetailsBufferSize = 2000;
   int getDevicesBufferSize = 3000;
   int searchDetailsBufferSize = 3000;
+  int playlistDetailsBufferSize = 3000;
   bool autoTokenRefresh = true;
   Client *client;
   void lateInit(const char *clientId, const char *clientSecret, const char *refreshToken = "");
