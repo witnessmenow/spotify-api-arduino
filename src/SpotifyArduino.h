@@ -97,6 +97,7 @@ enum SpotifyPlayingType
 {
   track,
   episode,
+  ad,
   other
 };
 

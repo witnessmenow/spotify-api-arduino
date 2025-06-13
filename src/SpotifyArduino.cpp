@@ -615,6 +615,10 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
             {
                 current.currentlyPlayingType = episode;
             }
+            else if (strcmp(currently_playing_type, "ad") == 0)
+            {
+                current.currentlyPlayingType = ad;
+            }
             else
             {
                 current.currentlyPlayingType = other;
