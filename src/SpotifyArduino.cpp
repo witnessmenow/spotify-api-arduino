@@ -83,7 +83,14 @@ int SpotifyArduino::makeRequestWithBody(const char *type, const char *command, c
 
     client->println();
 
-    client->print(body);
+    if (strlen(body) == 0)
+    {
+        client->println();
+    }
+    else
+    {
+        client->print(body);
+    }
 
     if (client->println() == 0)
     {
