@@ -83,7 +83,14 @@ int SpotifyArduino::makeRequestWithBody(const char *type, const char *command, c
 
     client->println();
 
-    client->print(body);
+    if (strlen(body) == 0)
+    {
+        client->println();
+    }
+    else
+    {
+        client->print(body);
+    }
 
     if (client->println() == 0)
     {
@@ -614,6 +621,10 @@ int SpotifyArduino::getCurrentlyPlaying(processCurrentlyPlaying currentlyPlaying
             else if (strcmp(currently_playing_type, "episode") == 0)
             {
                 current.currentlyPlayingType = episode;
+            }
+            else if (strcmp(currently_playing_type, "ad") == 0)
+            {
+                current.currentlyPlayingType = ad;
             }
             else
             {

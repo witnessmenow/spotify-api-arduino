@@ -97,6 +97,7 @@ enum SpotifyPlayingType
 {
   track,
   episode,
+  ad,
   other
 };
 
@@ -226,9 +227,9 @@ public:
 
 private:
   char _bearerToken[SPOTIFY_ACCESS_TOKEN_LENGTH + 10]; //10 extra is for "bearer " at the start
-  char *_refreshToken;
-  const char *_clientId;
-  const char *_clientSecret;
+  char *_refreshToken = nullptr;
+  const char *_clientId = nullptr;
+  const char *_clientSecret = nullptr;
   unsigned int timeTokenRefreshed;
   unsigned int tokenTimeToLiveMs;
   int commonGetImage(char *imageUrl);
